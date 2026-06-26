@@ -71,6 +71,13 @@ export interface ConsultationMessage {
   profiles?: Profile
 }
 
+export interface Category {
+  id: string
+  name: string
+  description: string | null
+  created_at: string
+}
+
 export interface Notification {
   id: string
   user_id: string
