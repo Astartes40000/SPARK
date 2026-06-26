@@ -182,3 +182,22 @@ alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check 
   check (role in ('admin', 'sme', 'investigator', 'radar_advisor', 'pending_sme', 'pending_radar_advisor'));
 alter table public.profiles add column if not exists is_radar_advisor boolean default false;
+
+-- Consultations RLS policies
+drop policy if exists "Investigators can create consultations" on public.consultations;
+drop policy if exists "Consultations select policy" on public.consultations;
+drop policy if exists "Investigators see own consultations" on public.consultations;
+drop policy if exists "SMEs can view all consultations" on public.consultations;
+drop policy if exists "SMEs and admins can update consultations" on public.consultations;
+create policy "Investigators can create consultations" on public.consultations for insert with check (auth.role() = 'authenticated');
+create policy "Consultations select policy" on public.consultations
+  for select using (
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('sme', 'admin', 'radar_advisor'))
+    or auth.uid() = investigator_id
+    or (case_type != 'Defect Review' and auth.uid() != investigator_id and 
+        exists (select 1 from public.profiles where id = auth.uid() and role = 'investigator'))
+  );
+create policy "SMEs and admins can update consultations" on public.consultations for update using (
+  exists (select 1 from public.profiles where id = auth.uid() and role in ('sme', 'admin', 'radar_advisor'))
+  or auth.uid() = investigator_id
+);
