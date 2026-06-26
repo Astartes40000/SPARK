@@ -25,7 +25,7 @@ export default function MessageThread({ consultationId, messages: initial, curre
   const isRadarAdvisor = currentProfile?.role === 'radar_advisor'
   const isResponder = isSME || isRadarAdvisor
   const responderLabel = isRadarAdvisor ? '📡 RADAR Advisor Response' : '🎓 SME Response'
-  const responderPrompt = isRadarAdvisor ? '📡 Post your RADAR guidance' : '🎓 Post your response'
+  const responderPrompt = isRadarAdvisor ? '📡 Post your RADAR guidance' : '🎓 SME Response'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
