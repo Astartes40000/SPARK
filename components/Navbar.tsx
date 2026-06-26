@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types'
 import { Shield, Bell, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
+import NotificationToast from './NotificationToast'
 
 export default function Navbar() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -14,6 +15,7 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNavMenu, setShowNavMenu] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -44,7 +46,20 @@ export default function Navbar() {
     getProfile()
     getNotifications()
     const channel = supabase.channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => getNotifications())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, async (payload) => {
+        await getNotifications()
+        // Show toast for the new notification
+        const n = payload.new as any
+        if (n.type === 'sme_answer') {
+          setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
+        } else if (n.type === 'reply') {
+          setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
+        } else {
+          setNewNotification({ message: 'You have a new notification' })
+        }
+        // Reset after a tick so repeat notifications trigger the effect again
+        setTimeout(() => setNewNotification(null), 100)
+      })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [supabase])
@@ -117,6 +132,7 @@ export default function Navbar() {
 
   return (
     <nav style={{ background: 'rgba(10,10,15,0.95)', borderBottom: '1px solid #1e1e2e', backdropFilter: 'blur(12px)' }} className="sticky top-0 z-50">
+      <NotificationToast newNotification={newNotification} />
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
 
         {/* Hamburger — leftmost */}
