@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'sme' | 'investigator' | 'radar_advisor'
+export type Role = 'admin' | 'sme' | 'investigator' | 'radar_advisor' | 'pending_sme' | 'pending_radar_advisor'
 export type CaseType = 'New Case' | 'Seller Appeal' | 'Amznpend' | 'SOP Discrepancy' | 'Defect Review'
 export type AssistanceType = 'Text Assistance' | 'Call Assistance' | 'Multicall'
 export type ConsultationStatus = 'Pending' | 'Assigned' | 'In Review' | 'Resolved' | 'Escalated' | 'Flagged'

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { Clock, CheckCircle, AlertTriangle, Tag, PlusCircle } from 'lucide-react'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardPage({
   searchParams,
@@ -18,6 +19,28 @@ export default async function DashboardPage({
   const isSME = profile?.role === 'sme'
   const isAdmin = profile?.role === 'admin'
   const isRadar = profile?.role === 'radar_advisor'
+  const isPending = profile?.role === 'pending_sme' || profile?.role === 'pending_radar_advisor'
+
+  // Pending users get a limited view
+  if (isPending) {
+    const requestedRole = profile?.role === 'pending_sme' ? 'SME Expert' : 'Radar Advisor'
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="max-w-md w-full rounded-2xl p-8 text-center" style={{ background: '#111118', border: '1px solid rgba(234,179,8,0.3)' }}>
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(234,179,8,0.1)' }}>
+            <Clock className="w-8 h-8" style={{ color: '#facc15' }} />
+          </div>
+          <h2 className="text-xl font-bold mb-2" style={{ color: '#e2e8f0' }}>Account Pending Approval</h2>
+          <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+            Your request to join as <span style={{ color: '#facc15' }}>{requestedRole}</span> is under review. An admin will approve your account shortly.
+          </p>
+          <p className="text-xs" style={{ color: '#475569' }}>
+            You will have full access once your account is approved. Check back later or contact your admin.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   let query = supabase
     .from('consultations')

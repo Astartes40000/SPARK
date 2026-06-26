@@ -6,7 +6,8 @@ create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   email text not null,
   full_name text,
-  role text not null check (role in ('admin', 'sme', 'investigator')) default 'investigator',
+  role text not null check (role in ('admin', 'sme', 'investigator', 'radar_advisor', 'pending_sme', 'pending_radar_advisor')) default 'investigator',
+  is_radar_advisor boolean default false,
   avatar_url text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -170,3 +171,10 @@ drop trigger if exists on_new_reply on public.replies;
 create trigger on_new_reply
   after insert on public.replies
   for each row execute procedure public.handle_new_reply();
+
+-- Migration: add new roles and is_radar_advisor column
+-- Run this in Supabase SQL Editor if the table already exists
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check 
+  check (role in ('admin', 'sme', 'investigator', 'radar_advisor', 'pending_sme', 'pending_radar_advisor'));
+alter table public.profiles add column if not exists is_radar_advisor boolean default false;

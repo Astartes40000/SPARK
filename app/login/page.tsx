@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Shield, ArrowRight } from 'lucide-react'
+import { Shield, ArrowRight, Clock } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isPending = searchParams.get('pending') === 'true'
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -25,7 +27,6 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f' }} className="bg-grid flex items-center justify-center px-4">
-      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div style={{
           position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)',
@@ -36,7 +37,6 @@ export default function LoginPage() {
       </div>
 
       <div className="relative w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
             style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 0 30px rgba(168,85,247,0.5)' }}>
@@ -48,8 +48,18 @@ export default function LoginPage() {
           <p className="mt-2 text-sm" style={{ color: '#64748b' }}>Sign in to your account</p>
         </div>
 
-        {/* Card */}
         <div className="rounded-2xl p-8" style={{ background: '#111118', border: '1px solid #1e1e2e', boxShadow: '0 0 40px rgba(0,0,0,0.6)' }}>
+
+          {isPending && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg mb-4" style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)' }}>
+              <Clock className="w-5 h-5 mt-0.5 shrink-0" style={{ color: '#ca8a04' }} />
+              <div>
+                <p className="text-sm font-medium" style={{ color: '#ca8a04' }}>Account pending approval</p>
+                <p className="text-xs mt-0.5" style={{ color: '#92400e' }}>Your request has been submitted. An admin will review and approve your account shortly.</p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="px-4 py-3 rounded-lg text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
@@ -83,5 +93,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
