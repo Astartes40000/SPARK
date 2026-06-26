@@ -20,6 +20,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (!email.endsWith('@amazon.com')) {
+      setError('Only @amazon.com email addresses are allowed.')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email, password,
       options: { data: { full_name: fullName, role } },
@@ -68,7 +75,7 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: '#94a3b8' }}>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                className="input-dark" placeholder="you@company.com" />
+                className="input-dark" placeholder="you@amazon.com" />
             </div>
 
             <div>

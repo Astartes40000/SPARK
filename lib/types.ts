@@ -71,6 +71,16 @@ export interface ConsultationMessage {
   profiles?: Profile
 }
 
+export interface Reply {
+  id: string
+  post_id: string
+  author_id: string
+  content: string
+  is_sme_answer: boolean
+  created_at: string
+  profiles?: Profile
+}
+
 export interface Category {
   id: string
   name: string
