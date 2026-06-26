@@ -1,0 +1,184 @@
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { Clock, CheckCircle, AlertTriangle, Tag, PlusCircle } from 'lucide-react'
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string; status?: string; case_type?: string }>
+}) {
+  const supabase = await createClient()
+  const params = await searchParams
+  const { search, status, case_type } = params
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user!.id).single()
+
+  const isSME = profile?.role === 'sme'
+  const isAdmin = profile?.role === 'admin'
+  const isRadar = profile?.role === 'radar_advisor'
+
+  let query = supabase
+    .from('consultations')
+    .select(`*, profiles!consultations_investigator_id_fkey(full_name, role), sme:profiles!consultations_sme_id_fkey(full_name), sla_tracking(is_overdue, sla_minutes)`)
+    .order('submitted_at', { ascending: false })
+
+  if (isSME) query = query.or(`sme_id.is.null,sme_id.eq.${user!.id}`)
+  if (isRadar) query = query.eq('is_radar', true)
+  // Hide Defect Review from other investigators and RADAR advisors
+  if (!isSME && !isAdmin) {
+    query = query.or(`case_type.neq.Defect Review,investigator_id.eq.${user!.id}`)
+  }
+  if (search) query = query.or(`title.ilike.%${search}%,case_id_reference.ilike.%${search}%`)
+  if (status) query = query.eq('status', status)
+  if (case_type) query = query.eq('case_type', case_type)
+
+  const { data: consultations } = await query.limit(50)
+
+  const all = consultations || []
+  const pending = all.filter((c) => c.status === 'Pending').length
+  const inReview = all.filter((c) => ['Assigned', 'In Review'].includes(c.status)).length
+  const resolved = all.filter((c) => c.status === 'Resolved').length
+  const overSLA = all.filter((c) => (c.sla_tracking as any)?.[0]?.is_overdue).length
+
+  const CASE_TYPES = ['New Case', 'Seller Appeal', 'Amznpend', 'SOP Discrepancy', 'Defect Review']
+  const STATUSES = ['Pending', 'Assigned', 'In Review', 'Resolved', 'Escalated', 'Flagged']
+
+  return (
+    <div className="flex gap-6">
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <h1 className="text-xl font-bold" style={{ color: '#e2e8f0' }}>
+            {search ? `Results for "${search}"` : isSME ? 'Open Cases' : isRadar ? '📡 RADAR Cases' : 'Cases'}
+          </h1>
+          {!isSME && !isRadar && (
+            <Link href="/dashboard/consult/new" className="btn-primary text-sm">
+              <PlusCircle className="w-4 h-4" /> New Consultation
+            </Link>
+          )}
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { label: 'Pending', value: pending, color: '#94a3b8' },
+            { label: 'In Review', value: inReview, color: '#38bdf8' },
+            { label: 'Resolved', value: resolved, color: '#4ade80' },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl p-4 text-center"
+              style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+              <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Status filters */}
+        <div className="flex gap-2 flex-wrap mb-3">
+          <Link href="/dashboard"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={!status && !case_type
+              ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)' }
+              : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+            All
+          </Link>
+          {STATUSES.map((s) => (
+            <Link key={s} href={`/dashboard?status=${s}`}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={status === s
+                ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)' }
+                : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+              {s}
+            </Link>
+          ))}
+          <Link href="/dashboard?radar=1"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            style={search === 'radar' ? { background: 'rgba(6,182,212,0.2)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.4)' } : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+            📡 RADAR
+          </Link>
+        </div>
+
+        {/* Case type filters */}
+        <div className="flex gap-2 flex-wrap mb-5">
+          {CASE_TYPES.map((ct) => (
+            <Link key={ct} href={`/dashboard?case_type=${encodeURIComponent(ct)}`}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={case_type === ct
+                ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)' }
+                : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+              {ct}
+            </Link>
+          ))}
+        </div>
+
+        {/* Consultations list */}
+        <div className="space-y-2">
+          {all.length === 0 ? (
+            <div className="rounded-xl p-12 text-center" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+              <Clock className="w-12 h-12 mx-auto mb-3" style={{ color: '#1e1e2e' }} />
+              <p className="font-medium" style={{ color: '#64748b' }}>No consultations found</p>
+              {!isSME && !isRadar && (
+                <Link href="/dashboard/consult/new" className="btn-primary inline-flex mt-4 text-sm">
+                  <PlusCircle className="w-4 h-4" /> New Consultation
+                </Link>
+              )}
+            </div>
+          ) : (
+            all.map((c) => {
+              const isOverdue = (c.sla_tracking as any)?.[0]?.is_overdue
+              return (
+                <Link key={c.id} href={`/dashboard/consult/${c.id}`}
+                  className="block rounded-xl p-4 transition-all card-hover"
+                  style={{ background: '#111118', border: '1px solid #1e1e2e' }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold text-white"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+                      {(c.profiles as any)?.full_name?.[0]?.toUpperCase() || 'I'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={`badge status-${c.status.toLowerCase().replace(' ', '-')}`}>{c.status}</span>
+                        <span className="badge" style={{ background: 'rgba(168,85,247,0.12)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' }}>
+                          <Tag className="w-3 h-3" />{c.case_type}
+                        </span>
+                        {c.previous_investigator_conflict && (
+                          <span className="badge" style={{ background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.25)' }}>
+                            <AlertTriangle className="w-3 h-3" /> Conflict
+                          </span>
+                        )}
+                        {c.is_radar && (
+                          <span className="badge" style={{ background: 'rgba(6,182,212,0.15)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.4)', boxShadow: '0 0 8px rgba(6,182,212,0.2)' }}>
+                            📡 RADAR
+                          </span>
+                        )}
+                        {c.case_type === 'Defect Review' && (
+                          <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}>
+                            🔒 Sensitive
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="font-semibold truncate" style={{ color: '#e2e8f0' }}>{c.title}</h2>
+                      <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: '#64748b' }}>
+                        <span>{(c.profiles as any)?.full_name}</span>
+                        <span>·</span>
+                        <span>{formatDistanceToNow(new Date(c.submitted_at), { addSuffix: true })}</span>
+                        <span>·</span>
+                        <span>{c.assistance_type}</span>
+                        {c.case_id_reference && <><span>·</span><span className="font-mono" style={{ color: '#a855f7' }}>{c.case_id_reference}</span></>}
+                        {(c.sme as any)?.full_name && <><span>·</span><span>SME: {(c.sme as any).full_name}</span></>}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
