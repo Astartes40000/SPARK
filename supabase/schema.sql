@@ -81,6 +81,10 @@ drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Profiles are viewable by everyone" on public.profiles for select using (true);
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id);
 create policy "Users can insert own profile" on public.profiles for insert with check (auth.uid() = id);
+drop policy if exists "Admins can update any profile" on public.profiles;
+create policy "Admins can update any profile" on public.profiles for update using (
+  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
 
 -- Posts policies
 drop policy if exists "Posts are viewable by everyone" on public.posts;
