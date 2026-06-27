@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types'
-import { Shield, Bell, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
+import { Shield, Bell, BellOff, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
 import NotificationToast from './NotificationToast'
 
 export default function Navbar() {
@@ -16,6 +16,7 @@ export default function Navbar() {
   const [showNavMenu, setShowNavMenu] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
+  const [pushEnabled, setPushEnabled] = useState<boolean | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -23,6 +24,44 @@ export default function Navbar() {
   const navMenuRef = useRef<HTMLDivElement>(null)
   const notifRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushEnabled(Notification.permission === 'granted')
+    }
+  }, [])
+
+  const handleEnablePush = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') return
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+      const existing = await registration.pushManager.getSubscription()
+      const subscription = existing || await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
+      })
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription),
+      })
+      setPushEnabled(true)
+    } catch (e) {
+      console.error('Push subscription failed:', e)
+    }
+  }
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
+    const rawData = atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+    return outputArray
+  }
 
   useEffect(() => {
     const getProfile = async () => {
@@ -169,6 +208,20 @@ export default function Navbar() {
             </div>
           )}
         </div>
+
+        {/* Push notification bell */}
+        {'Notification' in (typeof window !== 'undefined' ? window : {}) && pushEnabled === false && (
+          <button
+            onClick={handleEnablePush}
+            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all shrink-0"
+            style={{ color: '#64748b', border: '1px solid #1e1e2e' }}
+            title="Enable push notifications"
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#a855f7'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#1e1e2e' }}
+          >
+            <BellOff className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
