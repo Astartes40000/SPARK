@@ -258,19 +258,14 @@ tr.transition-colors:hover td {
 }
 
 /* Day mode overrides */
+html.day-mode,
 html.day-mode body {
   filter: invert(1) hue-rotate(180deg);
+  background-color: #ffffff !important;
 }
 
-/* Keep images and colors that shouldn't be inverted */
+/* Keep images and avatars looking correct */
 html.day-mode img,
-html.day-mode video,
-html.day-mode [style*="background: linear-gradient"],
-html.day-mode [style*="background:linear-gradient"] {
+html.day-mode video {
   filter: invert(1) hue-rotate(180deg);
-}
-
-html.day-mode .bg-grid {
-  filter: none;
-  background-color: #f1f5f9 !important;
 }
