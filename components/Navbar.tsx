@@ -40,22 +40,30 @@ export default function Navbar() {
   }, [])
 
   const handleEnablePush = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    if (!('serviceWorker' in navigator)) { console.log('Service workers not supported'); return }
+    if (!('PushManager' in window)) { console.log('PushManager not supported'); return }
     try {
+      console.log('Requesting permission...')
       const permission = await Notification.requestPermission()
+      console.log('Permission:', permission)
       if (permission !== 'granted') return
+      console.log('Registering service worker...')
       const registration = await navigator.serviceWorker.register('/sw.js')
+      console.log('SW registered, waiting...')
       await navigator.serviceWorker.ready
+      console.log('SW ready, subscribing...')
       const existing = await registration.pushManager.getSubscription()
       const subscription = existing || await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       })
-      await fetch('/api/push/subscribe', {
+      console.log('Subscription:', subscription)
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription),
       })
+      console.log('Save result:', res.status)
       setPushEnabled(true)
     } catch (e) {
       console.error('Push subscription failed:', e)
