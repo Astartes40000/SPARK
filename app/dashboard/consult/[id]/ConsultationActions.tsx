@@ -46,6 +46,17 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
   const claimConsultation = async () => {
     setLoading(true)
     await supabase.from('consultations').update({ sme_id: currentProfile!.id, status: 'In Review', acknowledged_at: new Date().toISOString() }).eq('id', consultation.id)
+    // Notify investigator that SME claimed their consultation
+    await fetch('/api/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: consultation.investigator_id,
+        title: 'SME assigned to your consultation',
+        body: `${currentProfile!.full_name} is now handling: ${consultation.title}`,
+        url: `/dashboard/consult/${consultation.id}`,
+      }),
+    })
     setLoading(false)
     router.refresh()
   }
@@ -56,6 +67,17 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
     await supabase.from('consultations').update({ status: 'Resolved', resolution, resolved_at: new Date().toISOString() }).eq('id', consultation.id)
     await supabase.from('notifications').insert({ user_id: consultation.investigator_id, type: 'sme_answer', from_user_id: currentProfile!.id })
     await supabase.from('sla_tracking').update({ resolved_at: new Date().toISOString() }).eq('consultation_id', consultation.id)
+    // Notify investigator that consultation was resolved
+    await fetch('/api/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: consultation.investigator_id,
+        title: '✅ Consultation Resolved',
+        body: consultation.title,
+        url: `/dashboard/consult/${consultation.id}`,
+      }),
+    })
     setLoading(false)
     router.refresh()
   }
