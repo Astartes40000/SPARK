@@ -17,7 +17,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
   const [pushEnabled, setPushEnabled] = useState<boolean | null>(null)
-  const [isDayMode, setIsDayMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -32,7 +32,6 @@ export default function Navbar() {
     if ('Notification' in window) {
       const granted = Notification.permission === 'granted'
       setPushEnabled(granted)
-      // If already granted, re-register subscription silently
       if (granted && 'serviceWorker' in navigator && 'PushManager' in window) {
         navigator.serviceWorker.register('/sw.js').then(async (registration) => {
           await navigator.serviceWorker.ready
@@ -50,58 +49,45 @@ export default function Navbar() {
       }
     }
     const saved = localStorage.getItem('theme')
-    if (saved === 'day') {
-      setIsDayMode(true)
-      document.documentElement.classList.add('day-mode')
-      document.body.style.filter = 'invert(1) hue-rotate(180deg)'
-      document.body.style.backgroundColor = '#ffffff'
+    if (saved === 'dark') {
+      setIsDarkMode(true)
+      document.documentElement.classList.add('dark-mode')
     }
   }, [])
 
   const handleEnablePush = async () => {
-    if (!('serviceWorker' in navigator)) { console.log('Service workers not supported'); return }
-    if (!('PushManager' in window)) { console.log('PushManager not supported'); return }
+    if (!('serviceWorker' in navigator)) return
+    if (!('PushManager' in window)) return
     try {
-      console.log('Requesting permission...')
       const permission = await Notification.requestPermission()
-      console.log('Permission:', permission)
       if (permission !== 'granted') return
-      console.log('Registering service worker...')
       const registration = await navigator.serviceWorker.register('/sw.js')
-      console.log('SW registered, waiting...')
       await navigator.serviceWorker.ready
-      console.log('SW ready, subscribing...')
       const existing = await registration.pushManager.getSubscription()
       const subscription = existing || await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       })
-      console.log('Subscription:', subscription)
       const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription),
       })
-      console.log('Save result:', res.status)
-      setPushEnabled(true)
+      if (res.ok) setPushEnabled(true)
     } catch (e) {
       console.error('Push subscription failed:', e)
     }
   }
 
   const toggleTheme = () => {
-    const next = !isDayMode
-    setIsDayMode(next)
+    const next = !isDarkMode
+    setIsDarkMode(next)
     if (next) {
-      document.documentElement.classList.add('day-mode')
-      document.body.style.filter = 'invert(1) hue-rotate(180deg)'
-      document.body.style.backgroundColor = '#ffffff'
-      localStorage.setItem('theme', 'day')
+      document.documentElement.classList.add('dark-mode')
+      localStorage.setItem('theme', 'dark')
     } else {
-      document.documentElement.classList.remove('day-mode')
-      document.body.style.filter = ''
-      document.body.style.backgroundColor = '#0a0a0f'
-      localStorage.setItem('theme', 'night')
+      document.documentElement.classList.remove('dark-mode')
+      localStorage.setItem('theme', 'light')
     }
   }
 
@@ -135,25 +121,15 @@ export default function Navbar() {
     }
     getProfile()
     getNotifications()
-
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       const channel = supabase.channel(`notifications-${user.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        }, async (payload) => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, async (payload) => {
           await getNotifications()
           const n = payload.new as any
-          if (n.type === 'sme_answer') {
-            setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
-          } else if (n.type === 'reply') {
-            setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
-          } else {
-            setNewNotification({ message: 'You have a new notification' })
-          }
+          if (n.type === 'sme_answer') setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
+          else if (n.type === 'reply') setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
+          else setNewNotification({ message: 'You have a new notification' })
           setTimeout(() => setNewNotification(null), 100)
         })
         .subscribe()
@@ -172,9 +148,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  useEffect(() => {
-    setSearchQuery('')
-  }, [pathname])
+  useEffect(() => { setSearchQuery('') }, [pathname])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -195,10 +169,10 @@ export default function Navbar() {
   }
 
   const roleBadge: Record<string, string> = {
-    admin: 'bg-red-500/20 text-red-400 border border-red-500/30',
-    sme: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-    investigator: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
-    radar_advisor: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
+    admin: 'bg-red-100 text-red-700 border border-red-200',
+    sme: 'bg-green-100 text-green-700 border border-green-200',
+    investigator: 'bg-blue-100 text-blue-700 border border-blue-200',
+    radar_advisor: 'bg-cyan-100 text-cyan-700 border border-cyan-200',
   }
 
   const menuLinks = [
@@ -213,8 +187,8 @@ export default function Navbar() {
 
   const isActive = (href: string) => pathname === href
 
-  const activeStyle = { background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.3)' }
-  const inactiveStyle = { color: '#64748b', border: '1px solid #1e1e2e' }
+  const activeStyle = { background: 'rgba(255,153,0,0.12)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.4)' }
+  const inactiveStyle = { color: 'var(--text-muted)', border: '1px solid var(--border)' }
 
   const searchConfig: Record<string, { placeholder: string; target: string }> = {
     '/dashboard': { placeholder: 'Search cases...', target: '/dashboard' },
@@ -225,79 +199,66 @@ export default function Navbar() {
   const currentSearch = searchConfig[pathname] || searchConfig['/dashboard']
 
   return (
-    <nav style={{ background: 'rgba(10,10,15,0.95)', borderBottom: '1px solid #1e1e2e', backdropFilter: 'blur(12px)' }} className="sticky top-0 z-50">
+    <nav style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(12px)' }} className="sticky top-0 z-50 shadow-sm">
       <NotificationToast newNotification={newNotification} />
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
 
         {/* Hamburger */}
         <div ref={navMenuRef} className="relative shrink-0">
-          <button
-            onClick={() => setShowNavMenu((v) => !v)}
+          <button onClick={() => setShowNavMenu((v) => !v)}
             className="flex items-center justify-center w-8 h-8 rounded-lg transition-all cursor-pointer"
-            style={showNavMenu ? activeStyle : inactiveStyle}
-          >
+            style={showNavMenu ? activeStyle : inactiveStyle}>
             {showNavMenu ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
           {showNavMenu && (
             <div className="absolute left-0 mt-2 w-56 rounded-xl overflow-hidden z-50"
-              style={{ background: '#111118', border: '1px solid #1e1e2e', boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(168,85,247,0.1)' }}>
-
-              {/* Nav links */}
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
               {menuLinks.map((item) => (
                 <Link key={item.href} href={item.href} onClick={() => setShowNavMenu(false)}
                   className="flex items-center gap-3 px-4 py-3 text-sm transition-all"
-                  style={{ color: isActive(item.href) ? '#c084fc' : '#94a3b8', background: isActive(item.href) ? 'rgba(168,85,247,0.08)' : 'transparent', borderBottom: '1px solid #1a1a28' }}
-                  onMouseEnter={(e) => { if (!isActive(item.href)) { e.currentTarget.style.background = 'rgba(168,85,247,0.06)'; e.currentTarget.style.color = '#c084fc' }}}
-                  onMouseLeave={(e) => { if (!isActive(item.href)) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8' }}}>
-                  <span style={{ color: isActive(item.href) ? '#a855f7' : '#64748b' }}>{item.icon}</span>
+                  style={{ color: isActive(item.href) ? '#E68A00' : 'var(--text-dim)', background: isActive(item.href) ? 'rgba(255,153,0,0.08)' : 'transparent', borderBottom: '1px solid var(--border)' }}
+                  onMouseEnter={(e) => { if (!isActive(item.href)) { e.currentTarget.style.background = 'rgba(255,153,0,0.06)'; e.currentTarget.style.color = '#E68A00' }}}
+                  onMouseLeave={(e) => { if (!isActive(item.href)) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-dim)' }}}>
+                  <span style={{ color: isActive(item.href) ? '#FF9900' : 'var(--text-muted)' }}>{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
 
               {/* Settings section */}
-              <div className="px-4 pt-3 pb-1" style={{ borderTop: '1px solid #1e1e2e' }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Settings</p>
+              <div className="px-4 pt-3 pb-1" style={{ borderTop: '1px solid var(--border)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Settings</p>
               </div>
 
               {/* Notifications toggle */}
               {isMounted && (
-              <button
-                onClick={() => { if (!pushEnabled) handleEnablePush() }}
-                className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
-                style={{ color: pushEnabled ? '#4ade80' : '#94a3b8', borderBottom: '1px solid #1a1a28' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <span style={{ color: pushEnabled ? '#4ade80' : '#64748b' }}>
-                  {pushEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-                </span>
-                <span className="flex-1 text-left">
-                  {pushEnabled ? 'Notifications enabled' : 'Enable Notifications'}
-                </span>
-                {pushEnabled && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>ON</span>
-                )}
-              </button>
+                <button onClick={() => { if (!pushEnabled) handleEnablePush() }}
+                  className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
+                  style={{ color: pushEnabled ? '#16A34A' : 'var(--text-dim)', borderBottom: '1px solid var(--border)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,153,0,0.06)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
+                  <span style={{ color: pushEnabled ? '#16A34A' : 'var(--text-muted)' }}>
+                    {pushEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                  </span>
+                  <span className="flex-1 text-left">{pushEnabled ? 'Notifications enabled' : 'Enable Notifications'}</span>
+                  {pushEnabled && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A' }}>ON</span>}
+                </button>
               )}
 
-              {/* Day/Night toggle */}
-              <button
-                onClick={toggleTheme}
+              {/* Dark mode toggle */}
+              <button onClick={toggleTheme}
                 className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
-                style={{ color: '#94a3b8' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <span style={{ color: '#64748b' }}>
-                  {isDayMode ? <Sun className="w-4 h-4" style={{ color: '#facc15' }} /> : <Moon className="w-4 h-4" />}
+                style={{ color: 'var(--text-dim)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,153,0,0.06)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
+                <span style={{ color: 'var(--text-muted)' }}>
+                  {isDarkMode ? <Sun className="w-4 h-4" style={{ color: '#FF9900' }} /> : <Moon className="w-4 h-4" />}
                 </span>
-                <span className="flex-1 text-left">{isDayMode ? 'Day Mode' : 'Night Mode'}</span>
-                {/* Toggle pill */}
+                <span className="flex-1 text-left">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                 <div className="relative w-9 h-5 rounded-full transition-colors shrink-0"
-                  style={{ background: isDayMode ? '#facc15' : '#1e1e2e', border: '1px solid', borderColor: isDayMode ? '#facc15' : '#334155' }}>
+                  style={{ background: isDarkMode ? '#FF9900' : 'var(--border)', border: '1px solid', borderColor: isDarkMode ? '#FF9900' : 'var(--border)' }}>
                   <div className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
-                    style={{ background: isDayMode ? '#0a0a0f' : '#64748b', left: isDayMode ? '18px' : '2px' }} />
+                    style={{ background: isDarkMode ? '#ffffff' : 'var(--text-muted)', left: isDarkMode ? '18px' : '2px' }} />
                 </div>
               </button>
             </div>
@@ -306,17 +267,19 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
-          <div style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 0 16px rgba(168,85,247,0.5)' }}
+          <div style={{ background: 'linear-gradient(135deg, #E68A00, #FF9900)', boxShadow: '0 2px 8px rgba(255,153,0,0.4)' }}
             className="w-8 h-8 rounded-lg flex items-center justify-center">
             <Shield className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-white hidden sm:block tracking-tight">Safe<span style={{ color: '#a855f7' }}>-T</span></span>
+          <span className="font-bold hidden sm:block tracking-tight" style={{ color: 'var(--text)' }}>
+            Safe<span style={{ color: '#FF9900' }}>-T</span>
+          </span>
         </Link>
 
         {/* Search */}
         <form onSubmit={handleSearch} className="flex-1 max-w-xl ml-auto">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#64748b' }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={currentSearch.placeholder}
               className="input-dark text-sm w-full"
@@ -328,33 +291,33 @@ export default function Navbar() {
           {/* Notifications bell */}
           <div ref={notifRef} className="relative">
             <button onClick={() => setShowNotifications((v) => !v)}
-              className="relative p-2 rounded-lg transition-colors" style={{ color: '#64748b' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#94a3b8' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}>
+              className="relative p-2 rounded-lg transition-colors" style={{ color: 'var(--text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,153,0,0.08)'; e.currentTarget.style.color = '#FF9900' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}>
               <Bell className="w-4 h-4" />
               {notifications.length > 0 && (
                 <span className="absolute top-1 right-1 w-4 h-4 text-white rounded-full flex items-center justify-center font-bold"
-                  style={{ background: '#a855f7', boxShadow: '0 0 8px rgba(168,85,247,0.8)', fontSize: '9px' }}>
+                  style={{ background: '#FF9900', fontSize: '9px' }}>
                   {notifications.length > 9 ? '9+' : notifications.length}
                 </span>
               )}
             </button>
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 rounded-xl overflow-hidden z-50"
-                style={{ background: '#111118', border: '1px solid #1e1e2e', boxShadow: '0 0 40px rgba(0,0,0,0.8)' }}>
-                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #1e1e2e' }}>
-                  <span className="font-semibold text-sm text-white">Notifications</span>
-                  {notifications.length > 0 && <button onClick={markAllRead} className="text-xs" style={{ color: '#a855f7' }}>Mark all read</button>}
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Notifications</span>
+                  {notifications.length > 0 && <button onClick={markAllRead} className="text-xs" style={{ color: '#FF9900' }}>Mark all read</button>}
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {notifications.length === 0
-                    ? <p className="text-center text-xs py-8" style={{ color: '#64748b' }}>No new notifications</p>
+                    ? <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>No new notifications</p>
                     : notifications.map((n) => (
                       <div key={n.id} onClick={() => setShowNotifications(false)}
-                        className="px-4 py-3 cursor-pointer text-sm" style={{ borderBottom: '1px solid #1a1a28', color: '#94a3b8' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(168,85,247,0.05)')}
+                        className="px-4 py-3 cursor-pointer text-sm" style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-dim)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,153,0,0.05)')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                        <span className="font-medium text-white">{n.profiles?.full_name || 'Someone'}</span>
+                        <span className="font-medium" style={{ color: 'var(--text)' }}>{n.profiles?.full_name || 'Someone'}</span>
                         {' '}{n.type === 'sme_answer' ? 'responded to your consultation' : 'replied'}
                       </div>
                     ))
@@ -369,22 +332,22 @@ export default function Navbar() {
             <div ref={userMenuRef} className="relative">
               <button onClick={() => setShowUserMenu((v) => !v)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all"
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,153,0,0.08)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+                  style={{ background: 'linear-gradient(135deg, #E68A00, #FF9900)' }}>
                   {profile.full_name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium hidden sm:block ${roleBadge[profile.role]}`}>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium hidden sm:block ${roleBadge[profile.role] || roleBadge.investigator}`}>
                   {profile.role.replace('_', ' ').toUpperCase()}
                 </span>
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 rounded-xl overflow-hidden z-50"
-                  style={{ background: '#111118', border: '1px solid #1e1e2e', boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(168,85,247,0.1)' }}>
-                  <div className="px-4 py-3" style={{ borderBottom: '1px solid #1e1e2e' }}>
-                    <p className="font-semibold text-sm text-white truncate">{profile.full_name}</p>
-                    <p className="text-xs truncate mt-0.5" style={{ color: '#64748b' }}>{profile.email}</p>
+                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                  <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <p className="font-semibold text-sm truncate" style={{ color: 'var(--text)' }}>{profile.full_name}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{profile.email}</p>
                   </div>
                   {[
                     { href: '/dashboard/profile', icon: <User className="w-4 h-4" />, label: 'Profile', show: true },
@@ -394,16 +357,16 @@ export default function Navbar() {
                   ].filter((i) => i.show).map((item) => (
                     <Link key={item.href} href={item.href} onClick={() => setShowUserMenu(false)}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors"
-                      style={{ color: '#94a3b8' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.08)'; e.currentTarget.style.color = '#c084fc' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8' }}>
+                      style={{ color: 'var(--text-dim)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,153,0,0.08)'; e.currentTarget.style.color = '#E68A00' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-dim)' }}>
                       {item.icon} {item.label}
                     </Link>
                   ))}
                   <button onClick={handleLogout}
                     className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm transition-colors"
-                    style={{ color: '#ef4444', borderTop: '1px solid #1e1e2e' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
+                    style={{ color: '#DC2626', borderTop: '1px solid var(--border)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(220,38,38,0.08)')}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>

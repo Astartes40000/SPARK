@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/login')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f' }} className="bg-grid">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }} className="bg-grid">
       <Navbar />
       <PushSubscription />
       <main className="max-w-6xl mx-auto px-4 py-6">

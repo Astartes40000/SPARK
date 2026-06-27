@@ -24,7 +24,6 @@ export default function MessageThread({ consultationId, messages: initial, curre
   const isSME = currentProfile?.role === 'sme'
   const isRadarAdvisor = currentProfile?.role === 'radar_advisor'
   const isResponder = isSME || isRadarAdvisor
-  const responderLabel = isRadarAdvisor ? '📡 RADAR Advisor Response' : '🎓 SME Response'
   const responderPrompt = isRadarAdvisor ? '📡 Post your RADAR guidance' : '🎓 SME Response'
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,25 +38,13 @@ export default function MessageThread({ consultationId, messages: initial, curre
       setMessages([...messages, msg as ConsultationMessage & { profiles: Profile }])
       setContent('')
       router.refresh()
-
-      // Send push notification to investigator if SME/radar responded
       if (isResponder) {
-        const { data: consultation } = await supabase
-          .from('consultations')
-          .select('investigator_id, title')
-          .eq('id', consultationId)
-          .single()
-
+        const { data: consultation } = await supabase.from('consultations').select('investigator_id, title').eq('id', consultationId).single()
         if (consultation) {
           await fetch('/api/push/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: consultation.investigator_id,
-              title: 'New response on your consultation',
-              body: consultation.title,
-              url: `/dashboard/consult/${consultationId}`,
-            }),
+            body: JSON.stringify({ userId: consultation.investigator_id, title: 'New response on your consultation', body: consultation.title, url: `/dashboard/consult/${consultationId}` }),
           })
         }
       }
@@ -66,67 +53,66 @@ export default function MessageThread({ consultationId, messages: initial, curre
   }
 
   const roleBadgeStyle: Record<string, React.CSSProperties> = {
-    admin: { background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' },
-    sme: { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' },
-    investigator: { background: 'rgba(168,85,247,0.12)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' },
-    radar_advisor: { background: 'rgba(6,182,212,0.12)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.25)' },
+    admin: { background: 'rgba(220,38,38,0.1)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.2)' },
+    sme: { background: 'rgba(22,163,74,0.1)', color: '#16A34A', border: '1px solid rgba(22,163,74,0.2)' },
+    investigator: { background: 'rgba(26,115,200,0.1)', color: '#1A73C8', border: '1px solid rgba(26,115,200,0.2)' },
+    radar_advisor: { background: 'rgba(6,182,212,0.1)', color: '#0E7490', border: '1px solid rgba(6,182,212,0.2)' },
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <MessageSquare className="w-5 h-5" style={{ color: '#64748b' }} />
-        <h2 className="font-semibold" style={{ color: '#e2e8f0' }}>{messages.length} {messages.length === 1 ? 'Message' : 'Messages'}</h2>
+        <MessageSquare className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+        <h2 className="font-semibold" style={{ color: 'var(--text)' }}>{messages.length} {messages.length === 1 ? 'Message' : 'Messages'}</h2>
       </div>
 
       {messages.length === 0 ? (
-        <div className="rounded-xl p-8 text-center" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-          <MessageSquare className="w-10 h-10 mx-auto mb-2" style={{ color: '#1e1e2e' }} />
-          <p className="text-sm" style={{ color: '#64748b' }}>No messages yet</p>
+        <div className="rounded-xl p-8 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+          <MessageSquare className="w-10 h-10 mx-auto mb-2" style={{ color: 'var(--border)' }} />
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No messages yet</p>
         </div>
       ) : (
         <div className="space-y-3">
           {messages.map((msg) => (
             <div key={msg.id} className="rounded-xl p-4"
               style={msg.is_sme_response
-                ? { background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)' }
-                : { background: '#111118', border: '1px solid #1e1e2e' }}>
+                ? { background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.2)' }
+                : { background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               {msg.is_sme_response && (
-                <div className="flex items-center gap-1.5 text-xs font-medium mb-2" style={{ color: isRadarAdvisor ? '#22d3ee' : '#4ade80' }}>
+                <div className="flex items-center gap-1.5 text-xs font-medium mb-2" style={{ color: isRadarAdvisor ? '#0E7490' : '#16A34A' }}>
                   {(msg.profiles as any)?.role === 'radar_advisor' ? '📡 RADAR Advisor Response' : '🎓 SME Response'}
                 </div>
               )}
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+                  style={{ background: 'linear-gradient(135deg, #E68A00, #FF9900)' }}>
                   {(msg.profiles as any)?.full_name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className="text-sm font-medium" style={{ color: '#e2e8f0' }}>{(msg.profiles as any)?.full_name}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{(msg.profiles as any)?.full_name}</span>
                 <span className="badge text-xs" style={roleBadgeStyle[(msg.profiles as any)?.role] || roleBadgeStyle.investigator}>
                   {(msg.profiles as any)?.role?.toUpperCase()}
                 </span>
-                <span className="text-xs ml-auto" style={{ color: '#64748b' }}>
+                <span className="text-xs ml-auto" style={{ color: 'var(--text-muted)' }}>
                   {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                 </span>
               </div>
-              <div className="prose prose-sm max-w-none" style={{ color: '#94a3b8' }}
-                dangerouslySetInnerHTML={{ __html: msg.content }} />
+              <div className="prose prose-sm max-w-none" style={{ color: 'var(--text-dim)' }} dangerouslySetInnerHTML={{ __html: msg.content }} />
             </div>
           ))}
         </div>
       )}
 
       {currentProfile && (
-        <div className="rounded-xl p-4" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-          <h3 className="font-medium mb-3" style={{ color: '#e2e8f0' }}>
+        <div className="rounded-xl p-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+          <h3 className="font-medium mb-3" style={{ color: 'var(--text)' }}>
             {isResponder ? responderPrompt : '💬 Ask a follow-up question'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-3">
-            {error && <div className="text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>{error}</div>}
+            {error && <div className="text-sm px-3 py-2 rounded-lg" style={{ background: 'rgba(220,38,38,0.08)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.2)' }}>{error}</div>}
             <RichEditor content={content} onChange={setContent} placeholder={isResponder ? 'Share your expert guidance...' : 'Ask a follow-up question...'} />
             <div className="flex justify-end">
               <button type="submit" disabled={loading} className="btn-primary text-sm"
-                style={isSME ? { background: 'linear-gradient(135deg, #16a34a, #22c55e)' } : isRadarAdvisor ? { background: 'linear-gradient(135deg, #0e7490, #06b6d4)' } : {}}>
+                style={isSME ? { background: 'linear-gradient(135deg, #15803D, #16A34A)' } : isRadarAdvisor ? { background: 'linear-gradient(135deg, #0E7490, #0891B2)' } : {}}>
                 {loading ? 'Sending...' : isResponder ? 'Post Response' : 'Send Message'}
               </button>
             </div>

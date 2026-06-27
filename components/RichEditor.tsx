@@ -33,35 +33,21 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
   ]
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1e1e2e', background: '#0d0d14' }}
-      onFocus={(e) => { e.currentTarget.style.borderColor = '#a855f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.1)' }}
-      onBlur={(e) => { e.currentTarget.style.borderColor = '#1e1e2e'; e.currentTarget.style.boxShadow = 'none' }}
-    >
-      {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-3 py-2" style={{ borderBottom: '1px solid #1e1e2e', background: '#111118' }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
+      onFocus={(e) => { e.currentTarget.style.borderColor = '#FF9900'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,153,0,0.15)' }}
+      onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}>
+      <div className="flex items-center gap-0.5 px-3 py-2" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         {tools.map((tool, i) => (
           <button key={i} type="button" onClick={tool.action} title={tool.title}
             className="p-1.5 rounded-lg transition-all"
-            style={tool.active ? {
-              background: 'rgba(168,85,247,0.2)',
-              color: '#c084fc',
-            } : {
-              color: '#64748b',
-            }}
-            onMouseEnter={(e) => { if (!tool.active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#94a3b8' }}}
-            onMouseLeave={(e) => { if (!tool.active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}}
-          >
+            style={tool.active ? { background: 'rgba(255,153,0,0.15)', color: '#E68A00' } : { color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => { if (!tool.active) { e.currentTarget.style.background = 'rgba(255,153,0,0.08)'; e.currentTarget.style.color = '#FF9900' }}}
+            onMouseLeave={(e) => { if (!tool.active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}}>
             {tool.icon}
           </button>
         ))}
       </div>
-
-      {/* Editor content */}
-      <EditorContent
-        editor={editor}
-        className="p-3 min-h-[120px] prose prose-sm max-w-none focus:outline-none"
-        style={{ color: '#e2e8f0' }}
-      />
+      <EditorContent editor={editor} className="p-3 min-h-[120px] prose prose-sm max-w-none focus:outline-none" style={{ color: 'var(--text)' }} />
     </div>
   )
 }

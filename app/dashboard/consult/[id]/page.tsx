@@ -30,75 +30,73 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
   const isRadarAdvisor = profile?.role === 'radar_advisor'
   const isAdmin = profile?.role === 'admin'
 
-  // Block access to Defect Review cases for non-owners, non-SMEs, non-admins and RADAR advisors
   const isSensitive = consultation.case_type === 'Defect Review'
   if (isSensitive && !isInvestigator && !isSME && !isAdmin) {
     notFound()
   }
 
-  // RADAR Advisors can interact on non-sensitive cases only
   const canInteract = isInvestigator || isSME || isAdmin || (isRadarAdvisor && !isSensitive)
 
   const statusStyle: Record<string, React.CSSProperties> = {
-    Pending: { background: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.3)' },
-    Assigned: { background: 'rgba(56,189,248,0.12)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)' },
-    'In Review': { background: 'rgba(168,85,247,0.12)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.3)' },
-    Resolved: { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' },
-    Escalated: { background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)' },
-    Flagged: { background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' },
+    Pending: { background: 'rgba(100,116,139,0.12)', color: '#475569', border: '1px solid rgba(100,116,139,0.3)' },
+    Assigned: { background: 'rgba(56,189,248,0.1)', color: '#0284c7', border: '1px solid rgba(56,189,248,0.3)' },
+    'In Review': { background: 'rgba(26,115,200,0.1)', color: '#1A73C8', border: '1px solid rgba(26,115,200,0.3)' },
+    Resolved: { background: 'rgba(34,197,94,0.1)', color: '#16a34a', border: '1px solid rgba(34,197,94,0.3)' },
+    Escalated: { background: 'rgba(249,115,22,0.1)', color: '#ea580c', border: '1px solid rgba(249,115,22,0.3)' },
+    Flagged: { background: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.3)' },
   }
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm mb-4 transition-colors" style={{ color: '#64748b' }}>
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm mb-4 transition-colors" style={{ color: '#94A3B8' }}>
         <ArrowLeft className="w-4 h-4" /> Back to dashboard
       </Link>
 
       {/* Main card */}
-      <div className="rounded-xl p-6 mb-4" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+      <div className="rounded-xl p-6 mb-4" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
         {/* Badges */}
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <span className="badge" style={statusStyle[consultation.status] || statusStyle.Pending}>
             {consultation.status === 'Resolved' && <CheckCircle className="w-3 h-3" />}
             {consultation.status}
           </span>
-          <span className="badge" style={{ background: 'rgba(168,85,247,0.1)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' }}>
+          <span className="badge" style={{ background: 'rgba(255,153,0,0.1)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.25)' }}>
             <Tag className="w-3 h-3" />{consultation.case_type}
           </span>
-          <span className="badge" style={{ background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.25)' }}>
+          <span className="badge" style={{ background: 'rgba(56,189,248,0.1)', color: '#0284c7', border: '1px solid rgba(56,189,248,0.25)' }}>
             {consultation.assistance_type}
           </span>
           {consultation.previous_investigator_conflict && (
-            <span className="badge" style={{ background: 'rgba(249,115,22,0.12)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.3)' }}>
+            <span className="badge" style={{ background: 'rgba(249,115,22,0.1)', color: '#ea580c', border: '1px solid rgba(249,115,22,0.3)' }}>
               <AlertTriangle className="w-3 h-3" /> Conflict Flagged
             </span>
           )}
           {consultation.is_radar && (
-            <span className="badge" style={{ background: 'rgba(6,182,212,0.15)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.4)', boxShadow: '0 0 10px rgba(6,182,212,0.2)' }}>
+            <span className="badge" style={{ background: 'rgba(6,182,212,0.12)', color: '#0e7490', border: '1px solid rgba(6,182,212,0.35)' }}>
               📡 RADAR
             </span>
           )}
           {consultation.case_type === 'Defect Review' && (
-            <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <span className="badge" style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.25)' }}>
               🔒 Sensitive
             </span>
           )}
         </div>
 
-        <h1 className="text-2xl font-bold mb-3" style={{ color: '#e2e8f0' }}>{consultation.title}</h1>
+        <h1 className="text-2xl font-bold mb-3" style={{ color: '#0F172A' }}>{consultation.title}</h1>
 
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+            style={{ background: 'linear-gradient(135deg, #FF9900, #FF6B00)' }}>
             {(consultation.profiles as any)?.full_name?.[0]?.toUpperCase() || 'I'}
           </div>
-          <span className="text-sm font-medium" style={{ color: '#e2e8f0' }}>{(consultation.profiles as any)?.full_name}</span>
-          <span className="text-xs" style={{ color: '#64748b' }}>
+          <span className="text-sm font-medium" style={{ color: '#0F172A' }}>{(consultation.profiles as any)?.full_name}</span>
+          <span className="text-xs" style={{ color: '#94A3B8' }}>
             {formatDistanceToNow(new Date(consultation.submitted_at), { addSuffix: true })}
           </span>
         </div>
 
-        <div className="prose prose-sm max-w-none mb-4" style={{ color: '#94a3b8' }}
+        <div className="prose prose-sm max-w-none mb-4" style={{ color: '#475569' }}
           dangerouslySetInnerHTML={{ __html: consultation.case_details }} />
 
         {/* Case refs */}
@@ -106,15 +104,15 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
           <div className="flex gap-3 flex-wrap mb-4">
             {consultation.case_id_reference && (
               <div className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg"
-                style={{ background: '#0d0d14', border: '1px solid #1e1e2e', color: '#94a3b8' }}>
-                <Tag className="w-3.5 h-3.5" style={{ color: '#64748b' }} />
-                Case ID: <span className="font-mono" style={{ color: '#a855f7' }}>{consultation.case_id_reference}</span>
+                style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', color: '#475569' }}>
+                <Tag className="w-3.5 h-3.5" style={{ color: '#94A3B8' }} />
+                Case ID: <span className="font-mono" style={{ color: '#FF9900' }}>{consultation.case_id_reference}</span>
               </div>
             )}
             {consultation.case_link && (
               <a href={consultation.case_link} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg"
-                style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: '#38bdf8' }}>
+                style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', color: '#0284c7' }}>
                 <LinkIcon className="w-3.5 h-3.5" /> View Case
               </a>
             )}
@@ -124,12 +122,12 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
         {/* SOP Reference */}
         {(consultation.sop_link || consultation.sop_section || consultation.sop_discrepancy_note) && (
           <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
-            <h3 className="text-sm font-semibold mb-2" style={{ color: '#fbbf24' }}>📋 SOP Reference</h3>
-            <div className="space-y-1 text-sm" style={{ color: '#94a3b8' }}>
-              {consultation.sop_section && <p>Section: <span className="font-medium" style={{ color: '#e2e8f0' }}>{consultation.sop_section}</span></p>}
+            <h3 className="text-sm font-semibold mb-2" style={{ color: '#d97706' }}>📋 SOP Reference</h3>
+            <div className="space-y-1 text-sm" style={{ color: '#475569' }}>
+              {consultation.sop_section && <p>Section: <span className="font-medium" style={{ color: '#0F172A' }}>{consultation.sop_section}</span></p>}
               {consultation.sop_link && (
                 <a href={consultation.sop_link} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1" style={{ color: '#38bdf8' }}>
+                  className="flex items-center gap-1" style={{ color: '#1A73C8' }}>
                   <LinkIcon className="w-3 h-3" /> View SOP
                 </a>
               )}
@@ -141,18 +139,18 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
         {/* Conflict */}
         {consultation.previous_investigator_conflict && consultation.conflict_description && (
           <div className="rounded-lg p-4 mb-4" style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)' }}>
-            <h3 className="text-sm font-semibold mb-1 flex items-center gap-1.5" style={{ color: '#fb923c' }}>
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-1.5" style={{ color: '#ea580c' }}>
               <AlertTriangle className="w-4 h-4" /> Previous Investigator Conflict
             </h3>
-            <p className="text-sm" style={{ color: '#94a3b8' }}>{consultation.conflict_description}</p>
+            <p className="text-sm" style={{ color: '#475569' }}>{consultation.conflict_description}</p>
           </div>
         )}
 
         {/* Previous actions */}
         {consultation.previous_actions && (
-          <div className="rounded-lg p-4 mb-4" style={{ background: '#0d0d14', border: '1px solid #1e1e2e' }}>
-            <h3 className="text-sm font-semibold mb-1" style={{ color: '#94a3b8' }}>Previous Actions Taken</h3>
-            <p className="text-sm" style={{ color: '#64748b' }}>{consultation.previous_actions}</p>
+          <div className="rounded-lg p-4 mb-4" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+            <h3 className="text-sm font-semibold mb-1" style={{ color: '#475569' }}>Previous Actions Taken</h3>
+            <p className="text-sm" style={{ color: '#94A3B8' }}>{consultation.previous_actions}</p>
           </div>
         )}
 
@@ -162,7 +160,7 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
             {consultation.image_urls.map((url: string, i: number) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={i} src={url} alt="" className="max-h-48 rounded-lg object-contain"
-                style={{ border: '1px solid #1e1e2e' }} />
+                style={{ border: '1px solid #E2E8F0' }} />
             ))}
           </div>
         )}
@@ -173,10 +171,10 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
       {/* Resolution */}
       {consultation.resolution && (
         <div className="rounded-xl p-5 mb-4" style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)' }}>
-          <h3 className="font-semibold mb-2 flex items-center gap-2" style={{ color: '#4ade80' }}>
+          <h3 className="font-semibold mb-2 flex items-center gap-2" style={{ color: '#16a34a' }}>
             <CheckCircle className="w-5 h-5" /> Resolution
           </h3>
-          <div className="prose prose-sm max-w-none" style={{ color: '#94a3b8' }}
+          <div className="prose prose-sm max-w-none" style={{ color: '#475569' }}
             dangerouslySetInnerHTML={{ __html: consultation.resolution }} />
         </div>
       )}

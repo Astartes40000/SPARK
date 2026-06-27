@@ -46,16 +46,10 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
   const claimConsultation = async () => {
     setLoading(true)
     await supabase.from('consultations').update({ sme_id: currentProfile!.id, status: 'In Review', acknowledged_at: new Date().toISOString() }).eq('id', consultation.id)
-    // Notify investigator that SME claimed their consultation
     await fetch('/api/push/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: consultation.investigator_id,
-        title: 'SME assigned to your consultation',
-        body: `${currentProfile!.full_name} is now handling: ${consultation.title}`,
-        url: `/dashboard/consult/${consultation.id}`,
-      }),
+      body: JSON.stringify({ userId: consultation.investigator_id, title: 'SME assigned to your consultation', body: `${currentProfile!.full_name} is now handling: ${consultation.title}`, url: `/dashboard/consult/${consultation.id}` }),
     })
     setLoading(false)
     router.refresh()
@@ -67,16 +61,10 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
     await supabase.from('consultations').update({ status: 'Resolved', resolution, resolved_at: new Date().toISOString() }).eq('id', consultation.id)
     await supabase.from('notifications').insert({ user_id: consultation.investigator_id, type: 'sme_answer', from_user_id: currentProfile!.id })
     await supabase.from('sla_tracking').update({ resolved_at: new Date().toISOString() }).eq('consultation_id', consultation.id)
-    // Notify investigator that consultation was resolved
     await fetch('/api/push/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: consultation.investigator_id,
-        title: '✅ Consultation Resolved',
-        body: consultation.title,
-        url: `/dashboard/consult/${consultation.id}`,
-      }),
+      body: JSON.stringify({ userId: consultation.investigator_id, title: '✅ Consultation Resolved', body: consultation.title, url: `/dashboard/consult/${consultation.id}` }),
     })
     setLoading(false)
     router.refresh()
@@ -92,19 +80,17 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
   if (isResolved) return null
 
   return (
-    <div className="rounded-xl p-5 mb-4 space-y-4" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-      <h3 className="font-semibold" style={{ color: '#e2e8f0' }}>Actions</h3>
+    <div className="rounded-xl p-5 mb-4 space-y-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+      <h3 className="font-semibold" style={{ color: 'var(--text)' }}>Actions</h3>
 
       {isAdmin && (
         <div className="space-y-2">
-          <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Assign SME</label>
+          <label className="text-sm font-medium" style={{ color: 'var(--text-dim)' }}>Assign SME</label>
           <div className="flex gap-2">
             <select value={selectedSME} onChange={(e) => setSelectedSME(e.target.value)} className="input-dark flex-1 text-sm">
               <option value="">Select an SME...</option>
               {availableSMEs.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.full_name} — {(s as any).sme_schedules?.[0]?.availability_status || 'Unknown'}
-                </option>
+                <option key={s.id} value={s.id}>{s.full_name} — {(s as any).sme_schedules?.[0]?.availability_status || 'Unknown'}</option>
               ))}
             </select>
             <button onClick={assignSME} disabled={!selectedSME || loading} className="btn-primary text-sm">
@@ -122,25 +108,25 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
 
       {consultation.sme && (
         <div className="flex items-center gap-2 text-sm">
-          <UserCheck className="w-4 h-4" style={{ color: '#4ade80' }} />
-          <span style={{ color: '#64748b' }}>Assigned to:</span>
-          <span className="font-medium" style={{ color: '#e2e8f0' }}>{(consultation.sme as any).full_name}</span>
+          <UserCheck className="w-4 h-4" style={{ color: '#16A34A' }} />
+          <span style={{ color: 'var(--text-muted)' }}>Assigned to:</span>
+          <span className="font-medium" style={{ color: 'var(--text)' }}>{(consultation.sme as any).full_name}</span>
         </div>
       )}
 
       {(isAssignedSME || canRespond) && (
         <div className="space-y-3">
-          <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Resolution</label>
+          <label className="text-sm font-medium" style={{ color: 'var(--text-dim)' }}>Resolution</label>
           <RichEditor content={resolution} onChange={setResolution} placeholder="Write your expert resolution and recommendations..." />
           <div className="flex gap-2">
             <button onClick={resolveConsultation} disabled={loading}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }}>
+              style={{ background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.3)', color: '#16A34A' }}>
               <CheckCircle className="w-4 h-4" /> Mark as Resolved
             </button>
             <button onClick={flagConsultation} disabled={loading}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#fb923c' }}>
+              style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)', color: '#D97706' }}>
               <AlertTriangle className="w-4 h-4" /> Flag for Escalation
             </button>
           </div>

@@ -26,12 +26,12 @@ export default async function AdminPage() {
   }
 
   const roleBadge: Record<string, React.CSSProperties> = {
-    admin: { background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' },
-    sme: { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.25)' },
-    investigator: { background: 'rgba(168,85,247,0.12)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' },
-    radar_advisor: { background: 'rgba(6,182,212,0.12)', color: '#22d3ee', border: '1px solid rgba(6,182,212,0.25)' },
-    pending_sme: { background: 'rgba(234,179,8,0.12)', color: '#facc15', border: '1px solid rgba(234,179,8,0.25)' },
-    pending_radar_advisor: { background: 'rgba(234,179,8,0.12)', color: '#facc15', border: '1px solid rgba(234,179,8,0.25)' },
+    admin: { background: 'rgba(220,38,38,0.1)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.2)' },
+    sme: { background: 'rgba(22,163,74,0.1)', color: '#16A34A', border: '1px solid rgba(22,163,74,0.2)' },
+    investigator: { background: 'rgba(26,115,200,0.1)', color: '#1A73C8', border: '1px solid rgba(26,115,200,0.2)' },
+    radar_advisor: { background: 'rgba(6,182,212,0.1)', color: '#0E7490', border: '1px solid rgba(6,182,212,0.2)' },
+    pending_sme: { background: 'rgba(217,119,6,0.1)', color: '#D97706', border: '1px solid rgba(217,119,6,0.2)' },
+    pending_radar_advisor: { background: 'rgba(217,119,6,0.1)', color: '#D97706', border: '1px solid rgba(217,119,6,0.2)' },
   }
 
   return (
@@ -45,38 +45,38 @@ export default async function AdminPage() {
 
       {/* Pending requests */}
       {pendingUsers.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ background: '#111118', border: '1px solid rgba(234,179,8,0.3)' }}>
-          <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(234,179,8,0.2)', background: 'rgba(234,179,8,0.05)' }}>
-            <Clock className="w-4 h-4" style={{ color: '#facc15' }} />
-            <h2 className="font-semibold" style={{ color: '#facc15' }}>Pending Approvals</h2>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: 'rgba(234,179,8,0.2)', color: '#facc15' }}>
+        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid rgba(217,119,6,0.3)' }}>
+          <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(217,119,6,0.2)', background: 'rgba(217,119,6,0.04)' }}>
+            <Clock className="w-4 h-4" style={{ color: '#D97706' }} />
+            <h2 className="font-semibold" style={{ color: '#D97706' }}>Pending Approvals</h2>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: 'rgba(217,119,6,0.15)', color: '#D97706' }}>
               {pendingUsers.length}
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: '#0d0d14' }}>
+                <tr style={{ background: 'var(--bg-elevated)' }}>
                   {['Name', 'Email', 'Requested Role', 'Submitted', 'Actions'].map((h) => (
-                    <th key={h} className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider" style={{ color: '#64748b' }}>{h}</th>
+                    <th key={h} className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {pendingUsers.map((u) => (
-                  <tr key={u.id} className="transition-colors" style={{ borderTop: '1px solid #1a1a28' }}>
-                    <td className="px-6 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }}>{u.full_name || '—'}</td>
-                    <td className="px-6 py-3 text-sm" style={{ color: '#64748b' }}>{u.email}</td>
+                  <tr key={u.id} className="transition-colors" style={{ borderTop: '1px solid var(--border)' }}>
+                    <td className="px-6 py-3 text-sm font-medium" style={{ color: 'var(--text)' }}>{u.full_name || '—'}</td>
+                    <td className="px-6 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>{u.email}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-1.5">
                         {u.role === 'pending_sme' ? (
-                          <><GraduationCap className="w-3.5 h-3.5" style={{ color: '#facc15' }} /><span className="badge" style={roleBadge.pending_sme}>SME Expert</span></>
+                          <><GraduationCap className="w-3.5 h-3.5" style={{ color: '#D97706' }} /><span className="badge" style={roleBadge.pending_sme}>SME Expert</span></>
                         ) : (
-                          <><Radar className="w-3.5 h-3.5" style={{ color: '#facc15' }} /><span className="badge" style={roleBadge.pending_radar_advisor}>Radar Advisor</span></>
+                          <><Radar className="w-3.5 h-3.5" style={{ color: '#D97706' }} /><span className="badge" style={roleBadge.pending_radar_advisor}>Radar Advisor</span></>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-3 text-sm" style={{ color: '#64748b' }}>
+                    <td className="px-6 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
                       {formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}
                     </td>
                     <td className="px-6 py-3">
@@ -93,43 +93,43 @@ export default async function AdminPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'Total Users', value: stats.totalUsers, color: '#e2e8f0' },
-          { label: 'SMEs', value: stats.smes, color: '#4ade80' },
-          { label: 'Investigators', value: stats.investigators, color: '#c084fc' },
-          { label: 'RADAR Advisors', value: stats.radarAdvisors, color: '#22d3ee' },
-          { label: 'Consultations', value: stats.totalConsultations, color: '#38bdf8' },
+          { label: 'Total Users', value: stats.totalUsers, color: 'var(--text)' },
+          { label: 'SMEs', value: stats.smes, color: '#16A34A' },
+          { label: 'Investigators', value: stats.investigators, color: '#1A73C8' },
+          { label: 'RADAR Advisors', value: stats.radarAdvisors, color: '#0E7490' },
+          { label: 'Consultations', value: stats.totalConsultations, color: '#FF9900' },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl p-4 text-center" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+          <div key={s.label} className="rounded-xl p-4 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <p className="text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs mt-1" style={{ color: '#64748b' }}>{s.label}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Users table */}
-      <div className="rounded-xl overflow-hidden" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-        <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid #1e1e2e' }}>
-          <Users className="w-4 h-4" style={{ color: '#64748b' }} />
-          <h2 className="font-semibold" style={{ color: '#e2e8f0' }}>Users</h2>
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+        <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: '1px solid var(--border)' }}>
+          <Users className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+          <h2 className="font-semibold" style={{ color: 'var(--text)' }}>Users</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: '#0d0d14' }}>
+              <tr style={{ background: 'var(--bg-elevated)' }}>
                 {['Name', 'Email', 'Role', 'Joined', 'Actions'].map((h) => (
-                  <th key={h} className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider" style={{ color: '#64748b' }}>{h}</th>
+                  <th key={h} className="text-left px-6 py-3 text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {activeUsers.map((u) => (
-                <tr key={u.id} className="transition-colors" style={{ borderTop: '1px solid #1a1a28' }}>
-                  <td className="px-6 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }}>{u.full_name || '—'}</td>
-                  <td className="px-6 py-3 text-sm" style={{ color: '#64748b' }}>{u.email}</td>
+                <tr key={u.id} className="transition-colors" style={{ borderTop: '1px solid var(--border)' }}>
+                  <td className="px-6 py-3 text-sm font-medium" style={{ color: 'var(--text)' }}>{u.full_name || '—'}</td>
+                  <td className="px-6 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>{u.email}</td>
                   <td className="px-6 py-3">
                     <span className="badge" style={roleBadge[u.role] || roleBadge.investigator}>{u.role.toUpperCase()}</span>
                   </td>
-                  <td className="px-6 py-3 text-sm" style={{ color: '#64748b' }}>
+                  <td className="px-6 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
                     {formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}
                   </td>
                   <td className="px-6 py-3">

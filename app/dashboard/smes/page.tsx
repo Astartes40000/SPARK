@@ -36,10 +36,10 @@ export default async function SMEPanelPage({
   }
 
   const statusStyle: Record<string, React.CSSProperties> = {
-    Available: { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' },
-    Busy: { background: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' },
-    Away: { background: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.3)' },
-    Off: { background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' },
+    Available: { background: 'rgba(22,163,74,0.12)', color: '#16A34A', border: '1px solid rgba(22,163,74,0.3)' },
+    Busy: { background: 'rgba(217,119,6,0.12)', color: '#D97706', border: '1px solid rgba(217,119,6,0.3)' },
+    Away: { background: 'rgba(100,116,139,0.12)', color: '#64748B', border: '1px solid rgba(100,116,139,0.3)' },
+    Off: { background: 'rgba(220,38,38,0.12)', color: '#DC2626', border: '1px solid rgba(220,38,38,0.3)' },
   }
 
   return (
@@ -47,9 +47,9 @@ export default async function SMEPanelPage({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold" style={{ color: '#e2e8f0' }}>SME&apos;s</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>
-            <span style={{ color: '#4ade80' }} className="font-medium">{availableCount} available</span>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>SME&apos;s</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            <span style={{ color: '#16A34A' }} className="font-medium">{availableCount} available</span>
             {' · '}{filteredSMEs.length} total SMEs
           </p>
         </div>
@@ -65,8 +65,8 @@ export default async function SMEPanelPage({
             href={`/dashboard/smes${s ? `?status=${s}` : ''}${specialization ? `${s ? '&' : '?'}specialization=${specialization}` : ''}`}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
             style={status === s || (!status && !s)
-              ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)' }
-              : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+              ? { background: 'rgba(255,153,0,0.12)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.4)' }
+              : { background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
             {s && <span className={`w-2 h-2 rounded-full ${statusDotClass[s]}`} />}
             {s === '' ? 'All' : s}
           </Link>
@@ -76,8 +76,8 @@ export default async function SMEPanelPage({
             href={`/dashboard/smes?specialization=${encodeURIComponent(spec)}${status ? `&status=${status}` : ''}`}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={specialization === spec
-              ? { background: 'rgba(168,85,247,0.2)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.4)' }
-              : { background: '#111118', color: '#64748b', border: '1px solid #1e1e2e' }}>
+              ? { background: 'rgba(255,153,0,0.12)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.4)' }
+              : { background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
             {spec}
           </Link>
         ))}
@@ -85,9 +85,9 @@ export default async function SMEPanelPage({
 
       {/* SME Grid */}
       {filteredSMEs.length === 0 ? (
-        <div className="rounded-xl p-12 text-center" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-          <Users className="w-12 h-12 mx-auto mb-3" style={{ color: '#1e1e2e' }} />
-          <p className="font-medium" style={{ color: '#64748b' }}>No SMEs found</p>
+        <div className="rounded-xl p-12 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+          <Users className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--border)' }} />
+          <p className="font-medium" style={{ color: 'var(--text-muted)' }}>No SMEs found</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,60 +100,51 @@ export default async function SMEPanelPage({
             return (
               <Link key={sme.id} href={`/dashboard/smes/${sme.id}`}
                 className="block rounded-xl p-5 transition-all card-hover"
-                style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-                {/* Avatar + status */}
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)' }}>
+                        style={{ background: 'linear-gradient(135deg, #E68A00, #FF9900)' }}>
                         {sme.full_name?.[0]?.toUpperCase() || 'S'}
                       </div>
                       <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${statusDotClass[availStatus]}`}
-                        style={{ borderColor: '#111118' }} />
+                        style={{ borderColor: 'var(--bg-surface)' }} />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>{sme.full_name}</p>
-                      {sme.site && <p className="text-xs" style={{ color: '#64748b' }}>{sme.site}</p>}
+                      <p className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{sme.full_name}</p>
+                      {sme.site && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{sme.site}</p>}
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                    style={statusStyle[availStatus] || statusStyle.Off}>
-                    {availStatus}
-                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={statusStyle[availStatus] || statusStyle.Off}>{availStatus}</span>
                 </div>
 
-                {/* Specializations */}
                 {specializations.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {specializations.slice(0, 3).map((spec: string) => (
                       <span key={spec} className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(168,85,247,0.1)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.2)' }}>
+                        style={{ background: 'rgba(255,153,0,0.1)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.2)' }}>
                         {spec}
                       </span>
                     ))}
-                    {specializations.length > 3 && <span className="text-xs" style={{ color: '#64748b' }}>+{specializations.length - 3}</span>}
+                    {specializations.length > 3 && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>+{specializations.length - 3}</span>}
                   </div>
                 )}
 
-                {/* Stats */}
                 <div className="grid grid-cols-2 gap-2 text-center">
                   {[
                     { label: 'Queue', value: schedule?.current_queue || 0 },
                     { label: 'Avg resp.', value: schedule?.avg_response_time > 0 ? `${schedule.avg_response_time}m` : '—' },
                   ].map((stat) => (
-                    <div key={stat.label} className="rounded-lg p-2" style={{ background: '#0d0d14' }}>
-                      <p className="text-xs" style={{ color: '#64748b' }}>{stat.label}</p>
-                      <p className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>
-                        {stat.value}
-                      </p>
+                    <div key={stat.label} className="rounded-lg p-2" style={{ background: 'var(--bg-elevated)' }}>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{stat.label}</p>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{stat.value}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Languages + Timezone */}
                 {(languages.length > 0 || schedule?.timezone) && (
-                  <div className="flex items-center gap-3 mt-3 text-xs" style={{ color: '#64748b' }}>
+                  <div className="flex items-center gap-3 mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
                     {schedule?.timezone && <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{schedule.timezone}</span>}
                     {languages.length > 0 && <span>💬 {languages.join(', ')}</span>}
                   </div>

@@ -56,18 +56,18 @@ export default function SchedulePage() {
   }
 
   const statusOptions: { value: AvailabilityStatus; label: string; style: React.CSSProperties; activeStyle: React.CSSProperties }[] = [
-    { value: 'Available', label: '🟢 Available', style: { background: '#111118', border: '1px solid #1e1e2e', color: '#64748b' }, activeStyle: { background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)', color: '#4ade80' } },
-    { value: 'Busy', label: '🟡 Busy', style: { background: '#111118', border: '1px solid #1e1e2e', color: '#64748b' }, activeStyle: { background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24' } },
-    { value: 'Away', label: '⚫ Away', style: { background: '#111118', border: '1px solid #1e1e2e', color: '#64748b' }, activeStyle: { background: 'rgba(100,116,139,0.12)', border: '1px solid rgba(100,116,139,0.4)', color: '#94a3b8' } },
-    { value: 'Off', label: '🔴 Off', style: { background: '#111118', border: '1px solid #1e1e2e', color: '#64748b' }, activeStyle: { background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171' } },
+    { value: 'Available', label: '🟢 Available', style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }, activeStyle: { background: 'rgba(22,163,74,0.1)', border: '1px solid rgba(22,163,74,0.4)', color: '#16A34A' } },
+    { value: 'Busy', label: '🟡 Busy', style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }, activeStyle: { background: 'rgba(217,119,6,0.1)', border: '1px solid rgba(217,119,6,0.4)', color: '#D97706' } },
+    { value: 'Away', label: '⚫ Away', style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }, activeStyle: { background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.4)', color: '#64748B' } },
+    { value: 'Off', label: '🔴 Off', style: { background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }, activeStyle: { background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.4)', color: '#DC2626' } },
   ]
 
   const sectionClass = "rounded-xl p-5 space-y-4"
-  const sectionStyle: React.CSSProperties = { background: '#111118', border: '1px solid #1e1e2e' }
+  const sectionStyle: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)' }
 
   const toggleBtn = (active: boolean) => active
-    ? { background: 'rgba(168,85,247,0.15)', border: '2px solid rgba(168,85,247,0.5)', color: '#c084fc' }
-    : { background: '#0d0d14', border: '2px solid #1e1e2e', color: '#64748b' }
+    ? { background: 'rgba(255,153,0,0.12)', border: '2px solid rgba(255,153,0,0.5)', color: '#E68A00' }
+    : { background: 'var(--bg-elevated)', border: '2px solid var(--border)', color: 'var(--text-muted)' }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -84,7 +84,7 @@ export default function SchedulePage() {
       <div className="space-y-4">
         {/* Status */}
         <div className={sectionClass} style={sectionStyle}>
-          <h2 className="font-semibold" style={{ color: '#e2e8f0' }}>Current Status</h2>
+          <h2 className="font-semibold" style={{ color: 'var(--text)' }}>Current Status</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {statusOptions.map((s) => (
               <button key={s.value} onClick={() => setAvailability(s.value)}
