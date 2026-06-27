@@ -269,21 +269,106 @@ html.day-mode {
 }
 
 html.day-mode body {
-  background-color: #f1f5f9;
-  color: #0f172a;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
 html.day-mode .bg-grid {
-  background-color: #f1f5f9;
+  background-color: #f1f5f9 !important;
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px) !important;
 }
 
+/* All dark surfaces become white/light */
+html.day-mode [style*="background: #111118"],
+html.day-mode [style*="background: rgb(17, 17, 24)"],
+html.day-mode [style*="background:#111118"] {
+  background: #ffffff !important;
+}
+
+html.day-mode [style*="background: #0a0a0f"],
+html.day-mode [style*="background:#0a0a0f"] {
+  background: #f1f5f9 !important;
+}
+
+html.day-mode [style*="background: #16161f"],
+html.day-mode [style*="background:#16161f"],
+html.day-mode [style*="background: #0d0d14"],
+html.day-mode [style*="background:#0d0d14"] {
+  background: #f8fafc !important;
+}
+
+/* Borders */
+html.day-mode [style*="border: 1px solid #1e1e2e"],
+html.day-mode [style*="border-color: #1e1e2e"],
+html.day-mode [style*="borderColor: #1e1e2e"] {
+  border-color: #e2e8f0 !important;
+}
+
+html.day-mode [style*="border-bottom: 1px solid #1e1e2e"],
+html.day-mode [style*="borderBottom: 1px solid #1e1e2e"] {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.day-mode [style*="border-top: 1px solid #1e1e2e"] {
+  border-top-color: #e2e8f0 !important;
+}
+
+/* Text colors */
+html.day-mode [style*="color: #e2e8f0"],
+html.day-mode [style*="color: #94a3b8"] {
+  color: #1e293b !important;
+}
+
+html.day-mode [style*="color: #64748b"] {
+  color: #64748b !important;
+}
+
+/* Nav */
 html.day-mode nav {
   background: rgba(255,255,255,0.95) !important;
   border-bottom-color: #e2e8f0 !important;
 }
 
+/* Inputs */
 html.day-mode .input-dark {
   background: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;
+}
+
+/* Tables */
+html.day-mode table {
+  background: #ffffff !important;
+}
+
+html.day-mode thead tr {
+  background: #f8fafc !important;
+}
+
+html.day-mode [style*="background: #1a1a28"],
+html.day-mode [style*="background:#1a1a28"] {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Cards and rounded containers */
+html.day-mode .rounded-xl,
+html.day-mode .rounded-2xl {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+/* Dropdown menus */
+html.day-mode [style*="background: rgba(10,10,15"],
+html.day-mode [style*="background: rgba(10, 10, 15"] {
+  background: #ffffff !important;
+}
+
+/* Scrollbar */
+html.day-mode ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.day-mode ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
 }
