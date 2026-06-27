@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types'
-import { Shield, Bell, BellOff, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
+import { Shield, Bell, BellOff, Sun, Moon, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
 import NotificationToast from './NotificationToast'
 
 export default function Navbar() {
@@ -17,6 +17,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
   const [pushEnabled, setPushEnabled] = useState<boolean | null>(null)
+  const [isDayMode, setIsDayMode] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -28,6 +29,12 @@ export default function Navbar() {
   useEffect(() => {
     if ('Notification' in window) {
       setPushEnabled(Notification.permission === 'granted')
+    }
+    // Load saved theme
+    const saved = localStorage.getItem('theme')
+    if (saved === 'day') {
+      setIsDayMode(true)
+      document.documentElement.classList.add('day-mode')
     }
   }, [])
 
@@ -51,6 +58,18 @@ export default function Navbar() {
       setPushEnabled(true)
     } catch (e) {
       console.error('Push subscription failed:', e)
+    }
+  }
+
+  const toggleTheme = () => {
+    const next = !isDayMode
+    setIsDayMode(next)
+    if (next) {
+      document.documentElement.classList.add('day-mode')
+      localStorage.setItem('theme', 'day')
+    } else {
+      document.documentElement.classList.remove('day-mode')
+      localStorage.setItem('theme', 'night')
     }
   }
 
@@ -85,7 +104,6 @@ export default function Navbar() {
     getProfile()
     getNotifications()
 
-    // Get user ID for filtered realtime subscription
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       const channel = supabase.channel(`notifications-${user.id}`)
@@ -111,7 +129,6 @@ export default function Navbar() {
     })
   }, [supabase])
 
-  // Close menus on outside mousedown
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const t = e.target as Node
@@ -123,7 +140,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Clear search when changing section
   useEffect(() => {
     setSearchQuery('')
   }, [pathname])
@@ -168,7 +184,6 @@ export default function Navbar() {
   const activeStyle = { background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.3)' }
   const inactiveStyle = { color: '#64748b', border: '1px solid #1e1e2e' }
 
-  // Search adapts to current section
   const searchConfig: Record<string, { placeholder: string; target: string }> = {
     '/dashboard': { placeholder: 'Search cases...', target: '/dashboard' },
     '/dashboard/smes': { placeholder: "Search SME's...", target: '/dashboard/smes' },
@@ -182,7 +197,7 @@ export default function Navbar() {
       <NotificationToast newNotification={newNotification} />
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
 
-        {/* Hamburger — leftmost */}
+        {/* Hamburger */}
         <div ref={navMenuRef} className="relative shrink-0">
           <button
             onClick={() => setShowNavMenu((v) => !v)}
@@ -195,6 +210,8 @@ export default function Navbar() {
           {showNavMenu && (
             <div className="absolute left-0 mt-2 w-56 rounded-xl overflow-hidden z-50"
               style={{ background: '#111118', border: '1px solid #1e1e2e', boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(168,85,247,0.1)' }}>
+
+              {/* Nav links */}
               {menuLinks.map((item) => (
                 <Link key={item.href} href={item.href} onClick={() => setShowNavMenu(false)}
                   className="flex items-center gap-3 px-4 py-3 text-sm transition-all"
@@ -205,23 +222,53 @@ export default function Navbar() {
                   {item.label}
                 </Link>
               ))}
+
+              {/* Settings section */}
+              <div className="px-4 pt-3 pb-1" style={{ borderTop: '1px solid #1e1e2e' }}>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Settings</p>
+              </div>
+
+              {/* Notifications toggle */}
+              <button
+                onClick={() => { if (!pushEnabled) handleEnablePush() }}
+                className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
+                style={{ color: pushEnabled ? '#4ade80' : '#94a3b8', borderBottom: '1px solid #1a1a28' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <span style={{ color: pushEnabled ? '#4ade80' : '#64748b' }}>
+                  {pushEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                </span>
+                <span className="flex-1 text-left">
+                  {pushEnabled ? 'Notifications enabled' : 'Enable Notifications'}
+                </span>
+                {pushEnabled && (
+                  <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>ON</span>
+                )}
+              </button>
+
+              {/* Day/Night toggle */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
+                style={{ color: '#94a3b8' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.06)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <span style={{ color: '#64748b' }}>
+                  {isDayMode ? <Sun className="w-4 h-4" style={{ color: '#facc15' }} /> : <Moon className="w-4 h-4" />}
+                </span>
+                <span className="flex-1 text-left">{isDayMode ? 'Day Mode' : 'Night Mode'}</span>
+                {/* Toggle pill */}
+                <div className="relative w-9 h-5 rounded-full transition-colors shrink-0"
+                  style={{ background: isDayMode ? '#facc15' : '#1e1e2e', border: '1px solid', borderColor: isDayMode ? '#facc15' : '#334155' }}>
+                  <div className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+                    style={{ background: isDayMode ? '#0a0a0f' : '#64748b', left: isDayMode ? '18px' : '2px' }} />
+                </div>
+              </button>
             </div>
           )}
         </div>
-
-        {/* Push notification bell */}
-        {'Notification' in (typeof window !== 'undefined' ? window : {}) && pushEnabled === false && (
-          <button
-            onClick={handleEnablePush}
-            className="flex items-center justify-center w-8 h-8 rounded-lg transition-all shrink-0"
-            style={{ color: '#64748b', border: '1px solid #1e1e2e' }}
-            title="Enable push notifications"
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#a855f7'; e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#1e1e2e' }}
-          >
-            <BellOff className="w-4 h-4" />
-          </button>
-        )}
 
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
@@ -244,8 +291,7 @@ export default function Navbar() {
         </form>
 
         <div className="flex items-center gap-1.5">
-
-          {/* Notifications */}
+          {/* Notifications bell */}
           <div ref={notifRef} className="relative">
             <button onClick={() => setShowNotifications((v) => !v)}
               className="relative p-2 rounded-lg transition-colors" style={{ color: '#64748b' }}

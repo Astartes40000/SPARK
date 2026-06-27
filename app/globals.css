@@ -256,3 +256,34 @@ tr.transition-colors:hover td {
 .metrics-link:hover {
   background: rgba(168, 85, 247, 0.04);
 }
+
+/* Day mode overrides */
+html.day-mode {
+  --bg-base: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-dim: #475569;
+}
+
+html.day-mode body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+html.day-mode .bg-grid {
+  background-color: #f1f5f9;
+}
+
+html.day-mode nav {
+  background: rgba(255,255,255,0.95) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.day-mode .input-dark {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
