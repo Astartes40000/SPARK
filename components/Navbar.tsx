@@ -18,6 +18,7 @@ export default function Navbar() {
   const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
   const [pushEnabled, setPushEnabled] = useState<boolean | null>(null)
   const [isDayMode, setIsDayMode] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const supabase = createClient()
@@ -27,10 +28,10 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    setIsMounted(true)
     if ('Notification' in window) {
       setPushEnabled(Notification.permission === 'granted')
     }
-    // Load saved theme
     const saved = localStorage.getItem('theme')
     if (saved === 'day') {
       setIsDayMode(true)
@@ -229,6 +230,7 @@ export default function Navbar() {
               </div>
 
               {/* Notifications toggle */}
+              {isMounted && (
               <button
                 onClick={() => { if (!pushEnabled) handleEnablePush() }}
                 className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
@@ -246,6 +248,7 @@ export default function Navbar() {
                   <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80' }}>ON</span>
                 )}
               </button>
+              )}
 
               {/* Day/Night toggle */}
               <button
