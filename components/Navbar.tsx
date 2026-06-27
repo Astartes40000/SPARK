@@ -45,23 +45,31 @@ export default function Navbar() {
     }
     getProfile()
     getNotifications()
-    const channel = supabase.channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, async (payload) => {
-        await getNotifications()
-        // Show toast for the new notification
-        const n = payload.new as any
-        if (n.type === 'sme_answer') {
-          setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
-        } else if (n.type === 'reply') {
-          setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
-        } else {
-          setNewNotification({ message: 'You have a new notification' })
-        }
-        // Reset after a tick so repeat notifications trigger the effect again
-        setTimeout(() => setNewNotification(null), 100)
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    // Get user ID for filtered realtime subscription
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const channel = supabase.channel(`notifications-${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, async (payload) => {
+          await getNotifications()
+          const n = payload.new as any
+          if (n.type === 'sme_answer') {
+            setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
+          } else if (n.type === 'reply') {
+            setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
+          } else {
+            setNewNotification({ message: 'You have a new notification' })
+          }
+          setTimeout(() => setNewNotification(null), 100)
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(channel) }
+    })
   }, [supabase])
 
   // Close menus on outside mousedown
