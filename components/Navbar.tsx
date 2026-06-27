@@ -53,6 +53,8 @@ export default function Navbar() {
     if (saved === 'day') {
       setIsDayMode(true)
       document.documentElement.classList.add('day-mode')
+      document.body.style.filter = 'invert(1) hue-rotate(180deg)'
+      document.body.style.backgroundColor = '#ffffff'
     }
   }, [])
 
@@ -92,9 +94,13 @@ export default function Navbar() {
     setIsDayMode(next)
     if (next) {
       document.documentElement.classList.add('day-mode')
+      document.body.style.filter = 'invert(1) hue-rotate(180deg)'
+      document.body.style.backgroundColor = '#ffffff'
       localStorage.setItem('theme', 'day')
     } else {
       document.documentElement.classList.remove('day-mode')
+      document.body.style.filter = ''
+      document.body.style.backgroundColor = '#0a0a0f'
       localStorage.setItem('theme', 'night')
     }
   }
