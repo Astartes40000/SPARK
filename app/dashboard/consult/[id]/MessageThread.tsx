@@ -35,7 +35,33 @@ export default function MessageThread({ consultationId, messages: initial, curre
       .insert({ consultation_id: consultationId, author_id: currentProfile!.id, content, is_sme_response: isResponder })
       .select('*, profiles(full_name, role)').single()
     if (msgError) { setError(msgError.message) }
-    else { setMessages([...messages, msg as ConsultationMessage & { profiles: Profile }]); setContent(''); router.refresh() }
+    else {
+      setMessages([...messages, msg as ConsultationMessage & { profiles: Profile }])
+      setContent('')
+      router.refresh()
+
+      // Send push notification to investigator if SME/radar responded
+      if (isResponder) {
+        const { data: consultation } = await supabase
+          .from('consultations')
+          .select('investigator_id, title')
+          .eq('id', consultationId)
+          .single()
+
+        if (consultation) {
+          await fetch('/api/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: consultation.investigator_id,
+              title: 'New response on your consultation',
+              body: consultation.title,
+              url: `/dashboard/consult/${consultationId}`,
+            }),
+          })
+        }
+      }
+    }
     setLoading(false)
   }
 
