@@ -39,14 +39,7 @@ export default function MessageThread({ consultationId, messages: initial, curre
       setContent('')
       router.refresh()
       if (isResponder) {
-        const { data: consultation } = await supabase.from('consultations').select('investigator_id, title').eq('id', consultationId).single()
-        if (consultation) {
-          await fetch('/api/push/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: consultation.investigator_id, title: 'New response on your consultation', body: consultation.title, url: `/dashboard/consult/${consultationId}` }),
-          })
-        }
+        // No email on individual messages - only on assignment and resolution
       }
     }
     setLoading(false)

@@ -46,11 +46,6 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
   const claimConsultation = async () => {
     setLoading(true)
     await supabase.from('consultations').update({ sme_id: currentProfile!.id, status: 'In Review', acknowledged_at: new Date().toISOString() }).eq('id', consultation.id)
-    await fetch('/api/push/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: consultation.investigator_id, title: 'SME assigned to your consultation', body: `${currentProfile!.full_name} is now handling: ${consultation.title}`, url: `/dashboard/consult/${consultation.id}` }),
-    })
     setLoading(false)
     router.refresh()
   }
@@ -61,11 +56,30 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
     await supabase.from('consultations').update({ status: 'Resolved', resolution, resolved_at: new Date().toISOString() }).eq('id', consultation.id)
     await supabase.from('notifications').insert({ user_id: consultation.investigator_id, type: 'sme_answer', from_user_id: currentProfile!.id })
     await supabase.from('sla_tracking').update({ resolved_at: new Date().toISOString() }).eq('consultation_id', consultation.id)
-    await fetch('/api/push/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: consultation.investigator_id, title: '✅ Consultation Resolved', body: consultation.title, url: `/dashboard/consult/${consultation.id}` }),
-    })
+
+    // Get investigator email
+    const { data: investigator } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', consultation.investigator_id)
+      .single()
+
+    if (investigator) {
+      await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'resolved',
+          to: investigator.email,
+          subject: '✅ Your consultation has been resolved',
+          consultationTitle: consultation.title,
+          caseType: consultation.case_type,
+          smeName: currentProfile!.full_name,
+          smeEmail: currentProfile!.email,
+          consultationId: consultation.id,
+        }),
+      })
+    }
     setLoading(false)
     router.refresh()
   }

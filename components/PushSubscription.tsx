@@ -1,4 +1,4 @@
-// Push subscription logic moved to Navbar.tsx
+// Placeholder - Web Push removed, email notifications used instead
 export default function PushSubscription() {
   return null
 }

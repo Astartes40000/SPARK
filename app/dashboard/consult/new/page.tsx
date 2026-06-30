@@ -51,10 +51,10 @@ const ASSISTANCE_INFO: Record<AssistanceType, { icon: React.ReactNode; desc: str
   },
 }
 
-const inactiveBtn: React.CSSProperties = { background: '#0d0d14', border: '2px solid #1e1e2e', color: '#64748b' }
-const activeBtn: React.CSSProperties = { background: 'rgba(168,85,247,0.15)', border: '2px solid rgba(168,85,247,0.5)', color: '#c084fc' }
-const cardStyle: React.CSSProperties = { background: '#111118', border: '1px solid #1e1e2e' }
-const labelStyle: React.CSSProperties = { color: '#94a3b8' }
+const inactiveBtn: React.CSSProperties = { background: 'var(--bg-elevated)', border: '2px solid var(--border)', color: 'var(--text-muted)' }
+const activeBtn: React.CSSProperties = { background: 'rgba(255,153,0,0.12)', border: '2px solid rgba(255,153,0,0.5)', color: '#E68A00' }
+const cardStyle: React.CSSProperties = { background: 'var(--bg-surface)', border: '1px solid var(--border)' }
+const labelStyle: React.CSSProperties = { color: 'var(--text-dim)' }
 
 export default function NewConsultationPage() {
   const [step, setStep] = useState(1)
@@ -135,7 +135,7 @@ export default function NewConsultationPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const { data: profileData } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const { data: profileData } = await supabase.from('profiles').select('role, email, full_name').eq('id', user.id).single()
     if (profileData?.role === 'sme' || profileData?.role === 'radar_advisor') {
       router.push('/dashboard')
       return
@@ -155,8 +155,47 @@ export default function NewConsultationPage() {
       ? `${caseType} — ${caseIdReference.trim()}`
       : `${caseType} — ${new Date().toISOString().split('T')[0]}`
 
+    // Auto-assign to available SME or Radar Advisor
+    let assignedSmeId: string | null = null
+    let assignedSme: any = null
+
+    if (isRadar) {
+      // Find radar advisor with least queue
+      const { data: radarAdvisors } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue)')
+        .eq('role', 'radar_advisor')
+      const available = radarAdvisors?.filter((r: any) =>
+        r.sme_schedules?.[0]?.availability_status === 'Available'
+      ) || []
+      if (available.length > 0) {
+        available.sort((a: any, b: any) =>
+          (a.sme_schedules?.[0]?.current_queue || 0) - (b.sme_schedules?.[0]?.current_queue || 0)
+        )
+        assignedSme = available[0]
+        assignedSmeId = available[0].id
+      }
+    } else {
+      // Find SME with least queue
+      const { data: smes } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue)')
+        .eq('role', 'sme')
+      const available = smes?.filter((s: any) =>
+        s.sme_schedules?.[0]?.availability_status === 'Available'
+      ) || []
+      if (available.length > 0) {
+        available.sort((a: any, b: any) =>
+          (a.sme_schedules?.[0]?.current_queue || 0) - (b.sme_schedules?.[0]?.current_queue || 0)
+        )
+        assignedSme = available[0]
+        assignedSmeId = available[0].id
+      }
+    }
+
     const { data: consultation, error: consultError } = await supabase.from('consultations').insert({
       investigator_id: user.id,
+      sme_id: assignedSmeId,
       case_type: caseType,
       assistance_type: assistanceType,
       urgency_level: 'Medium',
@@ -172,9 +211,58 @@ export default function NewConsultationPage() {
       previous_actions: previousActions || null,
       image_urls: imageUrls,
       is_radar: isRadar,
+      status: assignedSmeId ? 'Assigned' : 'Pending',
+      acknowledged_at: assignedSmeId ? new Date().toISOString() : null,
     }).select().single()
 
     if (consultError) { setError(consultError.message); setLoading(false); return }
+
+    // Send emails if auto-assigned
+    if (assignedSme && consultation) {
+      const roleLabel = isRadar ? 'RADAR Advisor' : 'SME'
+
+      // Email to investigator
+      await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'assigned_investigator',
+          to: profileData?.email,
+          subject: `Your consultation was assigned to a ${roleLabel}`,
+          consultationTitle: autoTitle,
+          caseType,
+          assistanceType,
+          assigneeName: assignedSme.full_name,
+          assigneeEmail: assignedSme.email,
+          consultationId: consultation.id,
+          isRadar,
+        }),
+      })
+
+      // Email to SME/Radar Advisor
+      await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'assigned_sme',
+          to: assignedSme.email,
+          subject: `New ${roleLabel} consultation assigned to you`,
+          consultationTitle: autoTitle,
+          caseType,
+          assistanceType,
+          investigatorName: profileData?.full_name,
+          investigatorEmail: profileData?.email,
+          consultationId: consultation.id,
+          isRadar,
+          caseIdReference: caseIdReference || null,
+        }),
+      })
+
+      // Update SME queue count
+      await supabase.from('sme_schedules')
+        .update({ current_queue: (assignedSme.sme_schedules?.[0]?.current_queue || 0) + 1 })
+        .eq('sme_id', assignedSmeId!)
+    }
 
     clearDraft()
     router.push(`/dashboard/consult/${consultation.id}`)

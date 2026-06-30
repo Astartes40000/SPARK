@@ -29,25 +29,6 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsMounted(true)
-    if ('Notification' in window) {
-      const granted = Notification.permission === 'granted'
-      setPushEnabled(granted)
-      if (granted && 'serviceWorker' in navigator && 'PushManager' in window) {
-        navigator.serviceWorker.register('/sw.js').then(async (registration) => {
-          await navigator.serviceWorker.ready
-          const existing = await registration.pushManager.getSubscription()
-          const subscription = existing || await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
-          })
-          await fetch('/api/push/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription),
-          })
-        }).catch((e) => console.error('Auto-subscribe failed:', e))
-      }
-    }
     const saved = localStorage.getItem('theme')
     if (saved === 'dark') {
       setIsDarkMode(true)
