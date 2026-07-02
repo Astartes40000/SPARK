@@ -106,37 +106,41 @@ export default function Navbar() {
       if (!user) return
 
       // Poll for new notifications every 10 seconds (works on corporate networks)
+      let knownIds = new Set<string>()
+      let firstPoll = true
+
       const poll = async () => {
         const { data } = await supabase
           .from('notifications')
           .select('*, profiles!notifications_from_user_id_fkey(full_name)')
           .eq('user_id', user.id).eq('read', false)
           .order('created_at', { ascending: false }).limit(10)
-        
+
         const newNotifs = data || []
-        
-        setNotifications((prev) => {
-          if (newNotifs.length > prev.length) {
-            // New notification arrived
-            const latest = newNotifs[0]
-            const consultationId = latest?.consultation_id
-            if (latest?.type === 'sme_answer') {
-              setNewNotification({ 
-                message: 'Your consultation has been assigned or updated', 
-                consultationId 
-              })
-            } else if (latest?.type === 'reply') {
-              setNewNotification({ 
-                message: 'Someone replied to your consultation', 
-                consultationId 
-              })
-            } else {
-              setNewNotification({ message: 'You have a new notification' })
-            }
-            setTimeout(() => setNewNotification(null), 100)
+        setNotifications(newNotifs)
+
+        if (firstPoll) {
+          // On first poll just record existing IDs, don't show toast
+          knownIds = new Set(newNotifs.map((n: any) => n.id))
+          firstPoll = false
+          return
+        }
+
+        // Find genuinely new notifications
+        const brandNew = newNotifs.filter((n: any) => !knownIds.has(n.id))
+        if (brandNew.length > 0) {
+          const latest = brandNew[0]
+          const consultationId = latest?.consultation_id
+          if (latest?.type === 'sme_answer') {
+            setNewNotification({ message: 'Your consultation has been assigned or updated', consultationId })
+          } else if (latest?.type === 'reply') {
+            setNewNotification({ message: 'Someone replied to your consultation', consultationId })
+          } else {
+            setNewNotification({ message: 'You have a new notification' })
           }
-          return newNotifs
-        })
+          setTimeout(() => setNewNotification(null), 100)
+          knownIds = new Set(newNotifs.map((n: any) => n.id))
+        }
       }
 
       poll()
