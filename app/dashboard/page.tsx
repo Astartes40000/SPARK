@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { Clock, AlertTriangle, Tag, PlusCircle } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import FilterPanel from '@/components/FilterPanel'
+import { Suspense } from 'react'
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ search?: string; status?: string; case_type?: string }> }) {
   const supabase = await createClient()
@@ -58,7 +60,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const activeFilter = { background: 'rgba(255,153,0,0.12)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.4)' }
   const inactiveFilter = { background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }
-
   return (
     <div className="flex gap-6">
       <div className="flex-1 min-w-0">
@@ -87,27 +88,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           ))}
         </div>
 
-        {/* Status filters */}
-        <div className="flex gap-2 flex-wrap mb-3">
-          <Link href="/dashboard" className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={!status && !case_type ? activeFilter : inactiveFilter}>All</Link>
-          {STATUSES.map((s) => (
-            <Link key={s} href={`/dashboard?status=${s}`} className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={status === s ? activeFilter : inactiveFilter}>{s}</Link>
-          ))}
-          <Link href="/dashboard?radar=1" className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={search === 'radar' ? { background: 'rgba(6,182,212,0.12)', color: '#0E7490', border: '1px solid rgba(6,182,212,0.3)' } : inactiveFilter}>
-            📡 RADAR
-          </Link>
-        </div>
-
-        {/* Case type filters */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {CASE_TYPES.map((ct) => (
-            <Link key={ct} href={`/dashboard?case_type=${encodeURIComponent(ct)}`} className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={case_type === ct ? activeFilter : inactiveFilter}>{ct}</Link>
-          ))}
-        </div>
+        {/* Filters */}
+        <Suspense>
+          <FilterPanel />
+        </Suspense>
 
         {/* List */}
         <div className="space-y-2">
