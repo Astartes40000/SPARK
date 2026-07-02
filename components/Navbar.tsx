@@ -104,17 +104,44 @@ export default function Navbar() {
     getNotifications()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      const channel = supabase.channel(`notifications-${user.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, async (payload) => {
-          await getNotifications()
-          const n = payload.new as any
-          if (n.type === 'sme_answer') setNewNotification({ message: 'An SME responded to your consultation', consultationId: n.consultation_id })
-          else if (n.type === 'reply') setNewNotification({ message: 'Someone replied to your consultation', consultationId: n.consultation_id })
-          else setNewNotification({ message: 'You have a new notification' })
-          setTimeout(() => setNewNotification(null), 100)
+
+      // Poll for new notifications every 10 seconds (works on corporate networks)
+      const poll = async () => {
+        const { data } = await supabase
+          .from('notifications')
+          .select('*, profiles!notifications_from_user_id_fkey(full_name)')
+          .eq('user_id', user.id).eq('read', false)
+          .order('created_at', { ascending: false }).limit(10)
+        
+        const newNotifs = data || []
+        
+        setNotifications((prev) => {
+          if (newNotifs.length > prev.length) {
+            // New notification arrived
+            const latest = newNotifs[0]
+            const consultationId = latest?.consultation_id
+            if (latest?.type === 'sme_answer') {
+              setNewNotification({ 
+                message: 'Your consultation has been assigned or updated', 
+                consultationId 
+              })
+            } else if (latest?.type === 'reply') {
+              setNewNotification({ 
+                message: 'Someone replied to your consultation', 
+                consultationId 
+              })
+            } else {
+              setNewNotification({ message: 'You have a new notification' })
+            }
+            setTimeout(() => setNewNotification(null), 100)
+          }
+          return newNotifs
         })
-        .subscribe()
-      return () => { supabase.removeChannel(channel) }
+      }
+
+      poll()
+      const interval = setInterval(poll, 10000)
+      return () => clearInterval(interval)
     })
   }, [supabase])
 
@@ -294,12 +321,13 @@ export default function Navbar() {
                   {notifications.length === 0
                     ? <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>No new notifications</p>
                     : notifications.map((n) => (
-                      <div key={n.id} onClick={() => setShowNotifications(false)}
+                      <div key={n.id} onClick={() => { setShowNotifications(false); if (n.consultation_id) router.push(`/dashboard/consult/${n.consultation_id}`) }}
                         className="px-4 py-3 cursor-pointer text-sm" style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-dim)' }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,153,0,0.05)')}
                         onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                         <span className="font-medium" style={{ color: 'var(--text)' }}>{n.profiles?.full_name || 'Someone'}</span>
-                        {' '}{n.type === 'sme_answer' ? 'responded to your consultation' : 'replied'}
+                        {' '}{n.type === 'sme_answer' ? 'updated your consultation' : 'replied'}
+                        {n.consultation_id && <span className="block text-xs mt-0.5" style={{ color: '#FF9900' }}>Click to view →</span>}
                       </div>
                     ))
                   }

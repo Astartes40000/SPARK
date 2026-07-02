@@ -217,45 +217,24 @@ export default function NewConsultationPage() {
 
     if (consultError) { setError(consultError.message); setLoading(false); return }
 
-    // Send emails if auto-assigned
+    // Insert notifications if auto-assigned
     if (assignedSme && consultation) {
-      const roleLabel = isRadar ? 'RADAR Advisor' : 'SME'
-
-      // Email to investigator
-      await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'assigned_investigator',
-          to: profileData?.email,
-          subject: `Your consultation was assigned to a ${roleLabel}`,
-          consultationTitle: autoTitle,
-          caseType,
-          assistanceType,
-          assigneeName: assignedSme.full_name,
-          assigneeEmail: assignedSme.email,
-          consultationId: consultation.id,
-          isRadar,
-        }),
+      // Notify the SME/Radar Advisor that a consultation was assigned to them
+      await supabase.from('notifications').insert({
+        user_id: assignedSmeId,
+        type: 'sme_answer',
+        from_user_id: user.id,
+        read: false,
+        consultation_id: consultation.id,
       })
 
-      // Email to SME/Radar Advisor
-      await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'assigned_sme',
-          to: assignedSme.email,
-          subject: `New ${roleLabel} consultation assigned to you`,
-          consultationTitle: autoTitle,
-          caseType,
-          assistanceType,
-          investigatorName: profileData?.full_name,
-          investigatorEmail: profileData?.email,
-          consultationId: consultation.id,
-          isRadar,
-          caseIdReference: caseIdReference || null,
-        }),
+      // Notify the investigator that their consultation was assigned
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'sme_answer',
+        from_user_id: assignedSmeId,
+        read: false,
+        consultation_id: consultation.id,
       })
 
       // Update SME queue count
