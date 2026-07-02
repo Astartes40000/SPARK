@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }} className="bg-grid">
       <Navbar />
       <PushSubscription />
-      {isSmeOrRadar && <AutoOnline userId={user.id} />}
+      {isSmeOrRadar && <AutoOnline userId={user.id} role={profile!.role} />}
       <main className="max-w-6xl mx-auto px-4 py-6">
         {children}
       </main>

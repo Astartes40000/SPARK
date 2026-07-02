@@ -5,24 +5,63 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   userId: string
+  role: string
 }
 
-export default function AutoOnline({ userId }: Props) {
+export default function AutoOnline({ userId, role }: Props) {
   const supabase = createClient()
 
   useEffect(() => {
-    // Set status to Available when SME/Radar Advisor opens the page
-    const setOnline = async () => {
+    const setOnlineAndAssign = async () => {
+      // Set status to Available
       await supabase.from('sme_schedules').upsert({
         sme_id: userId,
         availability_status: 'Available',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'sme_id' })
+
+      // Auto-assign pending consultations without an SME
+      const isRadarAdvisor = role === 'radar_advisor'
+
+      const { data: pendingCases } = await supabase
+        .from('consultations')
+        .select('id')
+        .is('sme_id', null)
+        .eq('status', 'Pending')
+        .eq('is_radar', isRadarAdvisor)
+        .limit(5) // Take up to 5 pending cases at once
+
+      if (pendingCases && pendingCases.length > 0) {
+        for (const c of pendingCases) {
+          await supabase.from('consultations').update({
+            sme_id: userId,
+            status: 'Assigned',
+            acknowledged_at: new Date().toISOString(),
+          }).eq('id', c.id)
+
+          // Notify the investigator
+          const { data: consultation } = await supabase
+            .from('consultations')
+            .select('investigator_id')
+            .eq('id', c.id)
+            .single()
+
+          if (consultation) {
+            await supabase.from('notifications').insert({
+              user_id: consultation.investigator_id,
+              type: 'sme_answer',
+              from_user_id: userId,
+              read: false,
+              consultation_id: c.id,
+            })
+          }
+        }
+      }
     }
 
-    setOnline()
+    setOnlineAndAssign()
 
-    // Set status to Away when page is hidden/closed
+    // Set Away when page hidden, Available when visible again
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'hidden') {
         await supabase.from('sme_schedules').update({
@@ -39,7 +78,7 @@ export default function AutoOnline({ userId }: Props) {
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [userId, supabase])
+  }, [userId, role, supabase])
 
   return null
 }
