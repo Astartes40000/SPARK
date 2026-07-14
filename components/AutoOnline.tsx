@@ -72,14 +72,21 @@ export default function AutoOnline({ userId, role }: Props) {
 
     setOnlineAndAssign()
 
-    // Set Away when page hidden, Available when visible again
+    // Set Away when page hidden for more than 30 seconds, Available when visible again
+    let awayTimeout: NodeJS.Timeout | null = null
+
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'hidden') {
-        await supabase.from('sme_schedules').update({
-          availability_status: 'Away',
-          updated_at: new Date().toISOString(),
-        }).eq('sme_id', userId)
+        // Wait 30 seconds before marking as Away
+        awayTimeout = setTimeout(async () => {
+          await supabase.from('sme_schedules').update({
+            availability_status: 'Away',
+            updated_at: new Date().toISOString(),
+          }).eq('sme_id', userId)
+        }, 30000)
       } else {
+        // Cancel the away timeout if page becomes visible again
+        if (awayTimeout) clearTimeout(awayTimeout)
         await supabase.from('sme_schedules').update({
           availability_status: 'Available',
           updated_at: new Date().toISOString(),
@@ -88,7 +95,10 @@ export default function AutoOnline({ userId, role }: Props) {
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (awayTimeout) clearTimeout(awayTimeout)
+    }
   }, [userId, role, supabase])
 
   return null
