@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation'
 import FilterPanel from '@/components/FilterPanel'
 import { Suspense } from 'react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ search?: string; status?: string; case_type?: string; page?: string }> }) {
   const supabase = await createClient()
   const params = await searchParams
