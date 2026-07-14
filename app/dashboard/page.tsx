@@ -6,10 +6,12 @@ import { redirect } from 'next/navigation'
 import FilterPanel from '@/components/FilterPanel'
 import { Suspense } from 'react'
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ search?: string; status?: string; case_type?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ search?: string; status?: string; case_type?: string; page?: string }> }) {
   const supabase = await createClient()
   const params = await searchParams
   const { search, status, case_type } = params
+  const page = parseInt(params.page || '1', 10)
+  const PAGE_SIZE = 20
 
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user!.id).single()
@@ -48,7 +50,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (status) query = query.eq('status', status)
   if (case_type) query = query.eq('case_type', case_type)
 
-  const { data: consultations } = await query.limit(50)
+  // Get total count for pagination
+  const countQuery = supabase.from('consultations').select('id', { count: 'exact', head: true })
+  if (isSME) countQuery.or(`sme_id.is.null,sme_id.eq.${user!.id}`)
+  if (isRadar) countQuery.eq('is_radar', true)
+  if (search) countQuery.or(`title.ilike.%${search}%,case_id_reference.ilike.%${search}%`)
+  if (status) countQuery.eq('status', status)
+  if (case_type) countQuery.eq('case_type', case_type)
+  const { count: totalCount } = await countQuery
+
+  const total = totalCount || 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
+  const { data: consultations } = await query.range(from, to)
 
   const all = consultations || []
   const pending = all.filter((c) => c.status === 'Pending').length
@@ -151,6 +167,33 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             </Link>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              Page {page} of {totalPages} · {total} cases total
+            </p>
+            <div className="flex items-center gap-2">
+              {page > 1 && (
+                <Link
+                  href={`/dashboard?${new URLSearchParams({ ...(status && { status }), ...(case_type && { case_type }), ...(search && { search }), page: String(page - 1) }).toString()}`}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}>
+                  ← Previous
+                </Link>
+              )}
+              {page < totalPages && (
+                <Link
+                  href={`/dashboard?${new URLSearchParams({ ...(status && { status }), ...(case_type && { case_type }), ...(search && { search }), page: String(page + 1) }).toString()}`}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-dim)', border: '1px solid var(--border)' }}>
+                  Next →
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
