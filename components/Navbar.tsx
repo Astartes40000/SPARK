@@ -296,6 +296,29 @@ export default function Navbar() {
             )}
           </div>
 
+          {/* Quick status selector for SME/Radar Advisor */}
+          {profile && (profile.role === 'sme' || profile.role === 'radar_advisor') && (
+            <div className="relative">
+              <select
+                defaultValue="Available"
+                onChange={async (e) => {
+                  await supabase.from('sme_schedules').upsert({
+                    sme_id: profile.id,
+                    availability_status: e.target.value,
+                    updated_at: new Date().toISOString(),
+                  }, { onConflict: 'sme_id' })
+                }}
+                className="text-xs rounded-lg px-2 py-1.5 font-medium cursor-pointer appearance-none pr-6"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}
+              >
+                <option value="Available">🟢 Available</option>
+                <option value="Busy">🟡 Busy</option>
+                <option value="Away">⚫ Away</option>
+                <option value="Off">🔴 Off</option>
+              </select>
+            </div>
+          )}
+
           {/* User menu */}
           {profile && (
             <div ref={userMenuRef} className="relative">
