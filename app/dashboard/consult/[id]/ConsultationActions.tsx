@@ -65,6 +65,15 @@ export default function ConsultationActions({ consultation, currentProfile }: Pr
       .single()
 
     // The notification is already inserted above, polling will pick it up
+
+    // Set SME back to Available after resolving
+    if (currentProfile?.role === 'sme' || currentProfile?.role === 'radar_advisor') {
+      await supabase.from('sme_schedules').update({
+        availability_status: 'Available',
+        current_queue: 0,
+        updated_at: new Date().toISOString(),
+      }).eq('sme_id', currentProfile!.id)
+    }
     setLoading(false)
     router.refresh()
   }

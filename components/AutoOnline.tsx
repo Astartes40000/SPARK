@@ -40,7 +40,7 @@ export default function AutoOnline({ userId, role }: Props) {
         .is('sme_id', null)
         .eq('status', 'Pending')
         .eq('is_radar', isRadarAdvisor)
-        .limit(5)
+        .limit(1)
 
       if (pendingCases && pendingCases.length > 0) {
         for (const c of pendingCases) {
@@ -51,6 +51,13 @@ export default function AutoOnline({ userId, role }: Props) {
             status: 'Assigned',
             acknowledged_at: new Date().toISOString(),
           }).eq('id', c.id)
+
+          // Set to Busy after taking a case
+          await supabase.from('sme_schedules').update({
+            availability_status: 'Busy',
+            current_queue: 1,
+            updated_at: new Date().toISOString(),
+          }).eq('sme_id', userId)
 
           const { data: consultation } = await supabase
             .from('consultations')

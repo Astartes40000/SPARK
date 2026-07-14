@@ -265,9 +265,13 @@ export default function NewConsultationPage() {
         consultation_id: consultation.id,
       })
 
-      // Update SME queue count
+      // Update SME queue count and set to Busy
       await supabase.from('sme_schedules')
-        .update({ current_queue: (assignedSme.sme_schedules?.[0]?.current_queue || 0) + 1 })
+        .update({ 
+          current_queue: (assignedSme.sme_schedules?.[0]?.current_queue || 0) + 1,
+          availability_status: 'Busy',
+          updated_at: new Date().toISOString(),
+        })
         .eq('sme_id', assignedSmeId!)
     }
 
