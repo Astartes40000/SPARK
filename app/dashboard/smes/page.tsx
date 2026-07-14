@@ -22,13 +22,25 @@ export default async function SMEPanelPage({
   let filteredSMEs = smes || []
   if (search) filteredSMEs = filteredSMEs.filter((s) =>
     s.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    ((s.sme_schedules as any)?.[0]?.specializations || []).some((sp: string) => sp.toLowerCase().includes(search.toLowerCase()))
+    ((Array.isArray(s.sme_schedules) ? (s.sme_schedules as any)?.[0] : s.sme_schedules)?.specializations || []).some((sp: string) => sp.toLowerCase().includes(search.toLowerCase()))
   )
-  if (specialization) filteredSMEs = filteredSMEs.filter((s) => (s.sme_schedules as any)?.[0]?.specializations?.includes(specialization) || s.specializations?.includes(specialization))
-  if (status) filteredSMEs = filteredSMEs.filter((s) => (s.sme_schedules as any)?.[0]?.availability_status === status)
+  if (specialization) filteredSMEs = filteredSMEs.filter((s) => {
+    const sch = Array.isArray(s.sme_schedules) ? (s.sme_schedules as any)?.[0] : s.sme_schedules
+    return (sch?.specializations || s.specializations || []).includes(specialization)
+  })
+  if (status) filteredSMEs = filteredSMEs.filter((s) => {
+    const sch = Array.isArray(s.sme_schedules) ? (s.sme_schedules as any)?.[0] : s.sme_schedules
+    return sch?.availability_status === status
+  })
 
-  const allSpecializations = Array.from(new Set((smes || []).flatMap((s) => (s.sme_schedules as any)?.[0]?.specializations || s.specializations || []))).filter(Boolean)
-  const availableCount = filteredSMEs.filter((s) => (s.sme_schedules as any)?.[0]?.availability_status === 'Available').length
+  const allSpecializations = Array.from(new Set((smes || []).flatMap((s) => {
+    const sch = Array.isArray(s.sme_schedules) ? (s.sme_schedules as any)?.[0] : s.sme_schedules
+    return sch?.specializations || s.specializations || []
+  }))).filter(Boolean)
+  const availableCount = filteredSMEs.filter((s) => {
+    const sch = Array.isArray(s.sme_schedules) ? (s.sme_schedules as any)?.[0] : s.sme_schedules
+    return sch?.availability_status === 'Available'
+  }).length
 
   const statusDotClass: Record<string, string> = {
     Available: 'status-available',
@@ -94,7 +106,7 @@ export default async function SMEPanelPage({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSMEs.map((sme) => {
-            const schedule = (sme.sme_schedules as any)?.[0]
+            const schedule = Array.isArray(sme.sme_schedules) ? (sme.sme_schedules as any)?.[0] : sme.sme_schedules
             const availStatus = schedule?.availability_status || 'Off'
             const specializations = schedule?.specializations || sme.specializations || []
             const languages = schedule?.languages || []
