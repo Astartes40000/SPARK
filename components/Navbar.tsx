@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types'
-import { Shield, Bell, BellOff, Sun, Moon, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
+import { Shield, Bell, Sun, Moon, Search, LogOut, User, Settings, Users, History, Clock, BarChart2, Zap, Menu, X } from 'lucide-react'
 import NotificationToast from './NotificationToast'
 
 export default function Navbar() {
@@ -16,7 +16,6 @@ export default function Navbar() {
   const [showNavMenu, setShowNavMenu] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [newNotification, setNewNotification] = useState<{ message: string; consultationId?: string } | null>(null)
-  const [pushEnabled, setPushEnabled] = useState<boolean | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
@@ -37,27 +36,7 @@ export default function Navbar() {
   }, [])
 
   const handleEnablePush = async () => {
-    if (!('serviceWorker' in navigator)) return
-    if (!('PushManager' in window)) return
-    try {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') return
-      const registration = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
-      const existing = await registration.pushManager.getSubscription()
-      const subscription = existing || await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
-      })
-      const res = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription),
-      })
-      if (res.ok) setPushEnabled(true)
-    } catch (e) {
-      console.error('Push subscription failed:', e)
-    }
+    // Web Push removed
   }
 
   const toggleTheme = () => {
@@ -70,15 +49,6 @@ export default function Navbar() {
       document.documentElement.classList.remove('dark-mode')
       localStorage.setItem('theme', 'light')
     }
-  }
-
-  function urlBase64ToUint8Array(base64String: string) {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
-    const rawData = atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
-    return outputArray
   }
 
   useEffect(() => {
@@ -243,20 +213,6 @@ export default function Navbar() {
               </div>
 
               {/* Notifications toggle */}
-              {isMounted && (
-                <button onClick={() => { if (!pushEnabled) handleEnablePush() }}
-                  className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
-                  style={{ color: pushEnabled ? '#16A34A' : 'var(--text-dim)', borderBottom: '1px solid var(--border)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,153,0,0.06)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}>
-                  <span style={{ color: pushEnabled ? '#16A34A' : 'var(--text-muted)' }}>
-                    {pushEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-                  </span>
-                  <span className="flex-1 text-left">{pushEnabled ? 'Notifications enabled' : 'Enable Notifications'}</span>
-                  {pushEnabled && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A' }}>ON</span>}
-                </button>
-              )}
-
               {/* Dark mode toggle */}
               <button onClick={toggleTheme}
                 className="flex items-center gap-3 px-4 py-3 w-full text-sm transition-all"
