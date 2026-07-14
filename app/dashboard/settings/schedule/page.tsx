@@ -10,6 +10,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const TIMEZONES = ['UTC','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Sao_Paulo','Europe/London','Europe/Paris','Europe/Madrid','Asia/Dubai','Asia/Kolkata','Asia/Bangkok','Asia/Singapore','Asia/Tokyo','Australia/Sydney']
 const SPECIALIZATION_OPTIONS = ['Seller Appeals','Policy','Defect Review','SOP','Regulatory','Chemistry','Safety','Operations','Legal','Regional']
 const LANGUAGE_OPTIONS = ['English','Spanish','Portuguese','French','German','Japanese','Mandarin','Arabic','Hindi']
+const MARKETPLACE_OPTIONS = ['NA', 'UK', 'MX', 'IN', 'BR', 'DE', 'ES', 'JP', 'IT', 'FR']
 
 export default function SchedulePage() {
   const [availability, setAvailability] = useState<AvailabilityStatus>('Away')
@@ -19,6 +20,7 @@ export default function SchedulePage() {
   const [workingDays, setWorkingDays] = useState<string[]>(['Monday','Tuesday','Wednesday','Thursday','Friday'])
   const [specializations, setSpecializations] = useState<string[]>([])
   const [languages, setLanguages] = useState<string[]>(['English'])
+  const [marketplaces, setMarketplaces] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const supabase = createClient()
@@ -36,6 +38,7 @@ export default function SchedulePage() {
         setWorkingDays(data.working_days || [])
         setSpecializations(data.specializations || [])
         setLanguages(data.languages || [])
+        setMarketplaces(data.marketplaces || [])
       }
     }
     load()
@@ -51,7 +54,7 @@ export default function SchedulePage() {
     await supabase.from('sme_schedules').upsert({
       sme_id: user.id, availability_status: availability, timezone,
       shift_start: shiftStart, shift_end: shiftEnd, working_days: workingDays,
-      specializations, languages, updated_at: new Date().toISOString()
+      specializations, languages, marketplaces, updated_at: new Date().toISOString()
     }, { onConflict: 'sme_id' })
     await supabase.from('profiles').update({ specializations }).eq('id', user.id)
     setLoading(false)
@@ -132,6 +135,21 @@ export default function SchedulePage() {
                 className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
                 style={toggleBtn(workingDays.includes(day))}>
                 {day.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Marketplaces */}
+        <div className={sectionClass} style={sectionStyle}>
+          <h2 className="font-semibold" style={{ color: 'var(--text)' }}>Marketplaces</h2>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Select the marketplaces you are trained to handle</p>
+          <div className="flex flex-wrap gap-2">
+            {MARKETPLACE_OPTIONS.map((mp) => (
+              <button key={mp} onClick={() => toggle(marketplaces, setMarketplaces, mp)}
+                className="px-3 py-2 rounded-lg text-sm font-medium transition-all"
+                style={toggleBtn(marketplaces.includes(mp))}>
+                {mp}
               </button>
             ))}
           </div>

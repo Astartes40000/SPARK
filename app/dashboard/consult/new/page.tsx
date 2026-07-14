@@ -70,6 +70,7 @@ export default function NewConsultationPage() {
   const [conflictDescription, setConflictDescription] = useState('')
   const [previousActions, setPreviousActions] = useState('')
   const [isRadar, setIsRadar] = useState(false)
+  const [marketplace, setMarketplace] = useState('')
   const [images, setImages] = useState<File[]>([])
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -155,29 +156,19 @@ export default function NewConsultationPage() {
       ? `${caseType} — ${caseIdReference.trim()}`
       : `${caseType} — ${new Date().toISOString().split('T')[0]}`
 
-    // Auto-assign to available SME or Radar Advisor based on specialization
+    // Auto-assign to available SME or Radar Advisor based on marketplace
     let assignedSmeId: string | null = null
     let assignedSme: any = null
 
-    // Map case types to specialization names
-    const caseTypeToSpec: Record<string, string> = {
-      'New Case': 'New Case',
-      'Seller Appeal': 'Seller Appeals',
-      'Amznpend': 'Amznpend',
-      'SOP Discrepancy': 'SOP',
-      'Defect Review': 'Defect Review',
-    }
-    const requiredSpec = caseTypeToSpec[caseType] || caseType
-
     if (isRadar) {
-      // Find radar advisor with matching specialization and least queue
       const { data: radarAdvisors } = await supabase
         .from('profiles')
-        .select('id, full_name, email, sme_schedules(availability_status, current_queue, specializations)')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue, marketplaces)')
         .eq('role', 'radar_advisor')
+      // Filter by marketplace match
       const available = radarAdvisors?.filter((r: any) =>
         r.sme_schedules?.[0]?.availability_status === 'Available' &&
-        (r.sme_schedules?.[0]?.specializations || []).includes(requiredSpec)
+        (r.sme_schedules?.[0]?.marketplaces || []).includes(marketplace)
       ) || []
       if (available.length > 0) {
         available.sort((a: any, b: any) =>
@@ -186,7 +177,7 @@ export default function NewConsultationPage() {
         assignedSme = available[0]
         assignedSmeId = available[0].id
       } else {
-        // Fallback: any available radar advisor regardless of specialization
+        // Fallback: any available radar advisor
         const fallback = radarAdvisors?.filter((r: any) =>
           r.sme_schedules?.[0]?.availability_status === 'Available'
         ) || []
@@ -199,14 +190,14 @@ export default function NewConsultationPage() {
         }
       }
     } else {
-      // Find SME with matching specialization and least queue
       const { data: smes } = await supabase
         .from('profiles')
-        .select('id, full_name, email, sme_schedules(availability_status, current_queue, specializations)')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue, marketplaces)')
         .eq('role', 'sme')
+      // Filter by marketplace match
       const available = smes?.filter((s: any) =>
         s.sme_schedules?.[0]?.availability_status === 'Available' &&
-        (s.sme_schedules?.[0]?.specializations || []).includes(requiredSpec)
+        (s.sme_schedules?.[0]?.marketplaces || []).includes(marketplace)
       ) || []
       if (available.length > 0) {
         available.sort((a: any, b: any) =>
@@ -215,7 +206,7 @@ export default function NewConsultationPage() {
         assignedSme = available[0]
         assignedSmeId = available[0].id
       } else {
-        // Fallback: any available SME regardless of specialization
+        // Fallback: any available SME
         const fallback = smes?.filter((s: any) =>
           s.sme_schedules?.[0]?.availability_status === 'Available'
         ) || []
@@ -247,6 +238,7 @@ export default function NewConsultationPage() {
       previous_actions: previousActions || null,
       image_urls: imageUrls,
       is_radar: isRadar,
+      marketplace: marketplace || null,
       status: assignedSmeId ? 'Assigned' : 'Pending',
       acknowledged_at: assignedSmeId ? new Date().toISOString() : null,
     }).select().single()
@@ -370,6 +362,18 @@ export default function NewConsultationPage() {
                   <span style={{ color: '#94a3b8' }}>{CASE_TYPE_INFO[caseType].desc}</span>
                 </div>
               )}
+            </div>
+
+            {/* Marketplace selector */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={labelStyle}>Marketplace *</label>
+              <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} required
+                className="input-dark">
+                <option value="">Select marketplace...</option>
+                {['NA', 'UK', 'MX', 'IN', 'BR', 'DE', 'ES', 'JP', 'IT', 'FR'].map((mp) => (
+                  <option key={mp} value={mp}>{mp}</option>
+                ))}
+              </select>
             </div>
 
             {/* RADAR flag — right after Case Type */}
