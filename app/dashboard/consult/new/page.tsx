@@ -280,22 +280,22 @@ export default function NewConsultationPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="p-2 rounded-lg" style={{ color: '#64748b' }}>
+          <Link href="/dashboard" className="p-2 rounded-lg" style={{ color: 'var(--text-muted)' }}>
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: '#e2e8f0' }}>New Consultation</h1>
-            <p className="text-sm" style={{ color: '#64748b' }}>Step {step} of 3</p>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>New Consultation</h1>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Step {step} of 3</p>
           </div>
         </div>
         {/* Draft indicator */}
         {draftSaved && (
-          <span className="text-xs flex items-center gap-1" style={{ color: '#4ade80' }}>
+          <span className="text-xs flex items-center gap-1" style={{ color: '#16A34A' }}>
             <CheckCircle className="w-3 h-3" /> Draft saved
           </span>
         )}
         {!draftSaved && (
-          <span className="text-xs" style={{ color: '#64748b' }}>Auto-saving draft...</span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Auto-saving draft...</span>
         )}
       </div>
 
@@ -303,13 +303,13 @@ export default function NewConsultationPage() {
       <div className="flex gap-2 mb-6">
         {[1, 2, 3].map((s) => (
           <div key={s} className="h-1 flex-1 rounded-full transition-all"
-            style={{ background: s <= step ? 'linear-gradient(90deg, #7c3aed, #a855f7)' : '#1e1e2e' }} />
+            style={{ background: s <= step ? 'linear-gradient(90deg, #E68A00, #FF9900)' : 'var(--border)' }} />
         ))}
       </div>
 
       {error && (
         <div className="px-4 py-3 rounded-lg text-sm mb-4"
-          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#DC2626' }}>
           {error}
         </div>
       )}
@@ -319,7 +319,7 @@ export default function NewConsultationPage() {
         {/* STEP 1 — Case Info */}
         {step === 1 && (
           <>
-            <h2 className="font-semibold text-lg" style={{ color: '#e2e8f0' }}>Case Information</h2>
+            <h2 className="font-semibold text-lg" style={{ color: 'var(--text)' }}>Case Information</h2>
 
             {/* Case Type with tooltips */}
             <div>
@@ -346,10 +346,10 @@ export default function NewConsultationPage() {
                     {/* Tooltip */}
                     {hoveredCaseType === type && (
                       <div className="absolute z-50 left-0 top-full mt-1.5 w-56 rounded-lg p-3 text-xs pointer-events-none"
-                        style={{ background: '#1a1a2e', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
-                        <p className="font-medium mb-1" style={{ color: '#c084fc' }}>{type}</p>
-                        <p style={{ color: '#94a3b8' }}>{CASE_TYPE_INFO[type].desc}</p>
-                        <p className="mt-1 italic" style={{ color: '#64748b' }}>{CASE_TYPE_INFO[type].example}</p>
+                        style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(255,153,0,0.25)', boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+                        <p className="font-medium mb-1" style={{ color: '#E68A00' }}>{type}</p>
+                        <p style={{ color: 'var(--text-dim)' }}>{CASE_TYPE_INFO[type].desc}</p>
+                        <p className="mt-1 italic" style={{ color: 'var(--text-muted)' }}>{CASE_TYPE_INFO[type].example}</p>
                       </div>
                     )}
                   </div>
@@ -357,9 +357,9 @@ export default function NewConsultationPage() {
               </div>
               {/* Active case type description */}
               {caseType && (
-                <div className="mt-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
-                  <span style={{ color: '#c084fc' }}>{caseType}: </span>
-                  <span style={{ color: '#94a3b8' }}>{CASE_TYPE_INFO[caseType].desc}</span>
+                <div className="mt-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgba(255,153,0,0.06)', border: '1px solid rgba(255,153,0,0.12)' }}>
+                  <span style={{ color: '#E68A00' }}>{caseType}: </span>
+                  <span style={{ color: 'var(--text-dim)' }}>{CASE_TYPE_INFO[caseType].desc}</span>
                 </div>
               )}
             </div>
@@ -386,10 +386,10 @@ export default function NewConsultationPage() {
                   }
                 }} className="w-4 h-4 rounded" />
                 <div>
-                  <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: '#22d3ee' }}>
+                  <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: '#0E7490' }}>
                     📡 Flag as RADAR Consultation
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     RADAR Advisors will be notified and can respond to this case
                   </p>
                 </div>
@@ -401,7 +401,7 @@ export default function NewConsultationPage() {
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Assistance Type *</label>
               {isRadar && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-2 text-xs"
-                  style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)', color: '#22d3ee' }}>
+                  style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)', color: '#0E7490' }}>
                   📡 RADAR cases support Text and Call Assistance only
                 </div>
               )}
@@ -412,15 +412,15 @@ export default function NewConsultationPage() {
                   <button key={type} type="button" onClick={() => setAssistanceType(type)}
                     className="w-full flex items-start gap-3 px-4 py-3 rounded-lg text-sm transition-all text-left"
                     style={assistanceType === type ? activeBtn : inactiveBtn}>
-                    <span className="mt-0.5 shrink-0" style={{ color: assistanceType === type ? '#a855f7' : '#64748b' }}>
+                    <span className="mt-0.5 shrink-0" style={{ color: assistanceType === type ? '#FF9900' : 'var(--text-muted)' }}>
                       {ASSISTANCE_INFO[type].icon}
                     </span>
                     <div>
                       <p className="font-medium">{type}</p>
-                      <p className="text-xs mt-0.5" style={{ color: assistanceType === type ? '#a855f7' : '#64748b', opacity: 0.8 }}>
+                      <p className="text-xs mt-0.5" style={{ color: assistanceType === type ? '#FF9900' : 'var(--text-muted)', opacity: 0.8 }}>
                         {ASSISTANCE_INFO[type].desc}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                         💡 {ASSISTANCE_INFO[type].when}
                       </p>
                     </div>
@@ -435,7 +435,7 @@ export default function NewConsultationPage() {
         {/* STEP 2 — Case Details */}
         {step === 2 && (
           <>
-            <h2 className="font-semibold text-lg" style={{ color: '#e2e8f0' }}>Case Details</h2>
+            <h2 className="font-semibold text-lg" style={{ color: 'var(--text)' }}>Case Details</h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -446,7 +446,7 @@ export default function NewConsultationPage() {
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={labelStyle}>Case Link</label>
                 <div className="relative">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#64748b' }} />
+                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
                   <input type="url" value={caseLink} onChange={(e) => setCaseLink(e.target.value)}
                     className="input-dark" style={{ paddingLeft: '2rem' }} placeholder="https://..." />
                 </div>
@@ -475,7 +475,7 @@ export default function NewConsultationPage() {
                       <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: '#fb923c' }}>
                         <AlertTriangle className="w-4 h-4" /> Flag Previous Investigator Conflict
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: '#94a3b8' }}>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
                         Check if a prior investigator took an action that contradicts SOP
                       </p>
                     </div>
@@ -491,14 +491,14 @@ export default function NewConsultationPage() {
             {/* Images */}
             <div>
               <label className="block text-sm font-medium mb-1.5" style={labelStyle}>
-                Screenshots <span style={{ color: '#64748b' }} className="font-normal">(up to 5)</span>
+                Screenshots <span style={{ color: 'var(--text-muted)' }} className="font-normal">(up to 5)</span>
               </label>
               {imagePreviewUrls.length > 0 && (
                 <div className="flex gap-2 mb-3 flex-wrap">
                   {imagePreviewUrls.map((url, i) => (
                     <div key={i} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg" style={{ border: '1px solid #1e1e2e' }} />
+                      <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg" style={{ border: '1px solid var(--border)' }} />
                       <button type="button" onClick={() => removeImage(i)}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white"
                         style={{ background: '#ef4444' }}>
@@ -510,9 +510,9 @@ export default function NewConsultationPage() {
               )}
               {images.length < 5 && (
                 <label className="flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-all w-fit"
-                  style={{ border: '2px dashed #1e1e2e', color: '#64748b' }}
-                  onMouseEnter={(e: any) => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)'; e.currentTarget.style.color = '#a855f7' }}
-                  onMouseLeave={(e: any) => { e.currentTarget.style.borderColor = '#1e1e2e'; e.currentTarget.style.color = '#64748b' }}>
+                  style={{ border: '2px dashed var(--border)', color: 'var(--text-muted)' }}
+                  onMouseEnter={(e: any) => { e.currentTarget.style.borderColor = 'rgba(255,153,0,0.4)'; e.currentTarget.style.color = '#FF9900' }}
+                  onMouseLeave={(e: any) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)' }}>
                   <Upload className="w-4 h-4" />
                   <span className="text-sm">Upload screenshots</span>
                   <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
@@ -525,10 +525,10 @@ export default function NewConsultationPage() {
         {/* STEP 3 — SOP Reference */}
         {step === 3 && (
           <>
-            <h2 className="font-semibold text-lg" style={{ color: '#e2e8f0' }}>
-              SOP Reference <span className="text-base font-normal" style={{ color: '#64748b' }}>(optional)</span>
+            <h2 className="font-semibold text-lg" style={{ color: 'var(--text)' }}>
+              SOP Reference <span className="text-base font-normal" style={{ color: 'var(--text-muted)' }}>(optional)</span>
             </h2>
-            <p className="text-sm" style={{ color: '#64748b' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Pin the exact SOP section you find unclear so the SME can address it directly.
             </p>
 
@@ -536,7 +536,7 @@ export default function NewConsultationPage() {
               <div>
                 <label className="block text-sm font-medium mb-1.5" style={labelStyle}>SOP Link</label>
                 <div className="relative">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#64748b' }} />
+                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-muted)' }} />
                   <input type="url" value={sopLink} onChange={(e) => setSopLink(e.target.value)}
                     className="input-dark" style={{ paddingLeft: '2rem' }} placeholder="https://..." />
                 </div>
@@ -555,8 +555,8 @@ export default function NewConsultationPage() {
             </div>
 
             {/* Summary */}
-            <div className="rounded-lg p-4 space-y-2.5" style={{ background: '#0d0d14', border: '1px solid #1e1e2e' }}>
-              <h3 className="font-semibold text-sm mb-3" style={{ color: '#94a3b8' }}>📋 Consultation Summary</h3>
+            <div className="rounded-lg p-4 space-y-2.5" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--text-dim)' }}>📋 Consultation Summary</h3>
               {[
                 { label: 'Case Type', value: caseType },
                 { label: 'Assistance', value: assistanceType },
@@ -565,9 +565,9 @@ export default function NewConsultationPage() {
                 isRadar ? { label: 'RADAR Flag', value: '📡 Yes' } : null,
                 sopSection ? { label: 'SOP Section', value: sopSection } : null,
               ].filter(Boolean).map((row: any) => (
-                <div key={row.label} className="flex justify-between text-sm" style={{ borderBottom: '1px solid #1e1e2e', paddingBottom: '6px' }}>
-                  <span style={{ color: '#64748b' }}>{row.label}</span>
-                  <span className="font-medium" style={{ color: '#e2e8f0' }}>{row.value}</span>
+                <div key={row.label} className="flex justify-between text-sm" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                  <span className="font-medium" style={{ color: 'var(--text)' }}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -579,7 +579,7 @@ export default function NewConsultationPage() {
           {step > 1 && (
             <button type="button" onClick={() => setStep(step - 1)}
               className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ background: '#0d0d14', border: '1px solid #1e1e2e', color: '#94a3b8' }}>
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}>
               Back
             </button>
           )}
@@ -607,14 +607,14 @@ export default function NewConsultationPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
           <div className="w-full max-w-md rounded-2xl p-6 space-y-4"
-            style={{ background: '#111118', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 40px rgba(168,85,247,0.15)' }}>
-            <h3 className="text-lg font-bold" style={{ color: '#e2e8f0' }}>Confirm Submission</h3>
-            <p className="text-sm" style={{ color: '#94a3b8' }}>
+            style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,153,0,0.25)', boxShadow: '0 4px 12px rgba(255,153,0,0.1)' }}>
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>Confirm Submission</h3>
+            <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
               Please review your consultation before submitting. Once sent, it will be assigned to an SME.
             </p>
 
             {/* Summary */}
-            <div className="rounded-lg p-4 space-y-2 text-sm" style={{ background: '#0d0d14', border: '1px solid #1e1e2e' }}>
+            <div className="rounded-lg p-4 space-y-2 text-sm" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
               {[
                 { label: 'Auto Title', value: caseIdReference.trim() ? `${caseType} — ${caseIdReference}` : `${caseType} — ${new Date().toISOString().split('T')[0]}` },
                 { label: 'Case Type', value: caseType },
@@ -624,8 +624,8 @@ export default function NewConsultationPage() {
                 isRadar ? { label: 'RADAR Flag', value: '📡 Yes' } : null,
               ].filter(Boolean).map((row: any) => (
                 <div key={row.label} className="flex justify-between">
-                  <span style={{ color: '#64748b' }}>{row.label}</span>
-                  <span className="font-medium" style={{ color: '#e2e8f0' }}>{row.value}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                  <span className="font-medium" style={{ color: 'var(--text)' }}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -633,7 +633,7 @@ export default function NewConsultationPage() {
             <div className="flex gap-3 pt-2">
               <button onClick={() => setShowConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-                style={{ background: '#0d0d14', border: '1px solid #1e1e2e', color: '#94a3b8' }}>
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}>
                 Go Back & Edit
               </button>
               <button onClick={handleSubmit} disabled={loading}

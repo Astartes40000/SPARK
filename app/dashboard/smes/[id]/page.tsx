@@ -23,10 +23,10 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
 
   const statusDotClass: Record<string, string> = { Available: 'status-available', Busy: 'status-busy', Away: 'status-away', Off: 'status-off' }
   const statusStyle: Record<string, React.CSSProperties> = {
-    Available: { background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' },
-    Busy: { background: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' },
-    Away: { background: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.3)' },
-    Off: { background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' },
+    Available: { background: 'rgba(34,197,94,0.12)', color: '#16A34A', border: '1px solid rgba(34,197,94,0.3)' },
+    Busy: { background: 'rgba(245,158,11,0.12)', color: '#D97706', border: '1px solid rgba(245,158,11,0.3)' },
+    Away: { background: 'rgba(100,116,139,0.12)', color: 'var(--text-dim)', border: '1px solid rgba(100,116,139,0.3)' },
+    Off: { background: 'rgba(239,68,68,0.12)', color: '#DC2626', border: '1px solid rgba(239,68,68,0.3)' },
   }
 
   return (
@@ -38,17 +38,17 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Left */}
         <div className="sm:col-span-1 space-y-4">
-          <div className="rounded-xl p-5 text-center" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-5 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="relative inline-block mb-3">
               <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto text-3xl font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 0 24px rgba(168,85,247,0.4)' }}>
+                style={{ background: 'linear-gradient(135deg, #E68A00, #FF9900)', boxShadow: '0 4px 12px rgba(255,153,0,0.3)' }}>
                 {sme.full_name?.[0]?.toUpperCase() || 'S'}
               </div>
               <span className={`absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-2 ${statusDotClass[availStatus]}`}
-                style={{ borderColor: '#111118' }} />
+                style={{ borderColor: 'var(--bg-surface)' }} />
             </div>
-            <h1 className="font-bold text-lg" style={{ color: '#e2e8f0' }}>{sme.full_name}</h1>
-            {sme.site && <p className="text-sm mt-0.5" style={{ color: '#64748b' }}>{sme.site}</p>}
+            <h1 className="font-bold text-lg" style={{ color: 'var(--text)' }}>{sme.full_name}</h1>
+            {sme.site && <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{sme.site}</p>}
             <span className="inline-block mt-2 text-xs px-3 py-1 rounded-full font-medium" style={statusStyle[availStatus] || statusStyle.Off}>
               {availStatus}
             </span>
@@ -59,9 +59,9 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
                 { label: 'Rating', value: avgRating ? avgRating.toFixed(1) : '—', star: !!avgRating },
                 { label: 'Queue', value: schedule?.current_queue || 0 },
               ].map((s) => (
-                <div key={s.label} className="rounded-lg p-2" style={{ background: '#0d0d14' }}>
-                  <p className="text-xs" style={{ color: '#64748b' }}>{s.label}</p>
-                  <p className="text-base font-bold flex items-center justify-center gap-0.5" style={{ color: '#e2e8f0' }}>
+                <div key={s.label} className="rounded-lg p-2" style={{ background: 'var(--bg-elevated)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
+                  <p className="text-base font-bold flex items-center justify-center gap-0.5" style={{ color: 'var(--text)' }}>
                     {s.star && <Star className="w-3.5 h-3.5" style={{ color: '#f59e0b', fill: '#f59e0b' }} />}
                     {s.value}
                   </p>
@@ -77,20 +77,20 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
 
           {/* Schedule */}
           {schedule && (
-            <div className="rounded-xl p-4 space-y-2.5" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-              <h3 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>Schedule</h3>
+            <div className="rounded-xl p-4 space-y-2.5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <h3 className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Schedule</h3>
               {[
                 { icon: <Globe className="w-4 h-4" />, text: schedule.timezone },
                 { icon: <Clock className="w-4 h-4" />, text: schedule.shift_start && schedule.shift_end ? `${schedule.shift_start} — ${schedule.shift_end}` : null },
                 { icon: <Calendar className="w-4 h-4" />, text: workingDays.length > 0 ? workingDays.join(', ') : null },
                 { icon: <Clock className="w-4 h-4" />, text: schedule.avg_response_time > 0 ? `Avg. ${schedule.avg_response_time} min response` : null },
               ].filter((r) => r.text).map((row, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm" style={{ color: '#94a3b8' }}>
-                  <span style={{ color: '#64748b' }}>{row.icon}</span>{row.text}
+                <div key={i} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-dim)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{row.icon}</span>{row.text}
                 </div>
               ))}
               {languages.length > 0 && (
-                <div className="text-sm" style={{ color: '#94a3b8' }}>💬 {languages.join(', ')}</div>
+                <div className="text-sm" style={{ color: 'var(--text-dim)' }}>💬 {languages.join(', ')}</div>
               )}
             </div>
           )}
@@ -99,36 +99,36 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
         {/* Right */}
         <div className="sm:col-span-2 space-y-4">
           {/* Specializations */}
-          <div className="rounded-xl p-5" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-            <h2 className="font-semibold mb-3 flex items-center gap-2" style={{ color: '#e2e8f0' }}>
-              <Briefcase className="w-4 h-4" style={{ color: '#64748b' }} /> Specializations
+          <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <h2 className="font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+              <Briefcase className="w-4 h-4" style={{ color: 'var(--text-muted)' }} /> Specializations
             </h2>
             {specializations.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {specializations.map((spec: string) => (
                   <span key={spec} className="text-sm px-3 py-1.5 rounded-full font-medium"
-                    style={{ background: 'rgba(168,85,247,0.12)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' }}>
+                    style={{ background: 'rgba(255,153,0,0.12)', color: '#E68A00', border: '1px solid rgba(255,153,0,0.25)' }}>
                     {spec}
                   </span>
                 ))}
               </div>
-            ) : <p className="text-sm" style={{ color: '#64748b' }}>No specializations listed yet</p>}
+            ) : <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No specializations listed yet</p>}
           </div>
 
           {/* Assistance modes */}
-          <div className="rounded-xl p-5" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
-            <h2 className="font-semibold mb-3" style={{ color: '#e2e8f0' }}>Assistance Modes</h2>
+          <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <h2 className="font-semibold mb-3" style={{ color: 'var(--text)' }}>Assistance Modes</h2>
             <div className="space-y-2">
               {[
                 { icon: <MessageSquare className="w-4 h-4" />, label: 'Text Assistance', desc: 'Written responses to your questions' },
                 { icon: <Phone className="w-4 h-4" />, label: 'Call Assistance', desc: 'Zoom call for complex cases' },
                 { icon: <Users className="w-4 h-4" />, label: 'Multicall', desc: 'Panel review with multiple SMEs' },
               ].map((mode) => (
-                <div key={mode.label} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: '#0d0d14' }}>
-                  <span style={{ color: '#a855f7' }}>{mode.icon}</span>
+                <div key={mode.label} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+                  <span style={{ color: '#FF9900' }}>{mode.icon}</span>
                   <div>
-                    <p className="text-sm font-medium" style={{ color: '#e2e8f0' }}>{mode.label}</p>
-                    <p className="text-xs" style={{ color: '#64748b' }}>{mode.desc}</p>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{mode.label}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{mode.desc}</p>
                   </div>
                 </div>
               ))}
@@ -136,37 +136,37 @@ export default async function SMEProfilePage({ params }: { params: Promise<{ id:
           </div>
 
           {/* Ratings */}
-          <div className="rounded-xl p-5" style={{ background: '#111118', border: '1px solid #1e1e2e' }}>
+          <div className="rounded-xl p-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold flex items-center gap-2" style={{ color: '#e2e8f0' }}>
+              <h2 className="font-semibold flex items-center gap-2" style={{ color: 'var(--text)' }}>
                 <Star className="w-4 h-4" style={{ color: '#f59e0b' }} /> Reviews
               </h2>
               {avgRating && (
                 <div className="flex items-center gap-1">
                   {[1,2,3,4,5].map((s) => (
-                    <Star key={s} className="w-4 h-4" style={{ color: s <= Math.round(avgRating) ? '#f59e0b' : '#1e1e2e', fill: s <= Math.round(avgRating) ? '#f59e0b' : '#1e1e2e' }} />
+                    <Star key={s} className="w-4 h-4" style={{ color: s <= Math.round(avgRating) ? '#f59e0b' : 'var(--border)', fill: s <= Math.round(avgRating) ? '#f59e0b' : 'var(--border)' }} />
                   ))}
-                  <span className="text-sm font-medium ml-1" style={{ color: '#e2e8f0' }}>{avgRating.toFixed(1)}</span>
+                  <span className="text-sm font-medium ml-1" style={{ color: 'var(--text)' }}>{avgRating.toFixed(1)}</span>
                 </div>
               )}
             </div>
             {!ratings || ratings.length === 0 ? (
-              <p className="text-sm text-center py-4" style={{ color: '#64748b' }}>No reviews yet</p>
+              <p className="text-sm text-center py-4" style={{ color: 'var(--text-muted)' }}>No reviews yet</p>
             ) : (
               <div className="space-y-3">
                 {ratings.map((r) => (
-                  <div key={r.id} className="pb-3 border-b last:border-0" style={{ borderColor: '#1e1e2e' }}>
+                  <div key={r.id} className="pb-3 border-b last:border-0" style={{ borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="flex gap-0.5">
                         {[1,2,3,4,5].map((s) => (
-                          <Star key={s} className="w-3.5 h-3.5" style={{ color: s <= r.rating ? '#f59e0b' : '#1e1e2e', fill: s <= r.rating ? '#f59e0b' : '#1e1e2e' }} />
+                          <Star key={s} className="w-3.5 h-3.5" style={{ color: s <= r.rating ? '#f59e0b' : 'var(--border)', fill: s <= r.rating ? '#f59e0b' : 'var(--border)' }} />
                         ))}
                       </div>
-                      <span className="text-xs" style={{ color: '#64748b' }}>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         by {(r as any).profiles?.full_name || 'Investigator'} · {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                       </span>
                     </div>
-                    {r.feedback && <p className="text-sm" style={{ color: '#94a3b8' }}>{r.feedback}</p>}
+                    {r.feedback && <p className="text-sm" style={{ color: 'var(--text-dim)' }}>{r.feedback}</p>}
                   </div>
                 ))}
               </div>

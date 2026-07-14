@@ -48,7 +48,7 @@ export default async function ConsultationDetailPage({ params }: { params: Promi
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm mb-4 transition-colors" style={{ color: '#94A3B8' }}>
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm mb-4 transition-colors" style={{ color: 'var(--text-dim)' }}>
         <ArrowLeft className="w-4 h-4" /> Back to dashboard
       </Link>
 
