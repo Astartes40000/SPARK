@@ -12,18 +12,21 @@ export default function AutoOnline({ userId, role }: Props) {
   const supabase = createClient()
 
   useEffect(() => {
-    const setOnlineAndAssign = async () => {
-      // Set status to Available
+    const setOnline = async () => {
+      // Set status to Available when SME/Radar Advisor opens the page
       await supabase.from('sme_schedules').upsert({
         sme_id: userId,
         availability_status: 'Available',
         updated_at: new Date().toISOString(),
       }, { onConflict: 'sme_id' })
+    }
 
-      // Auto-assign pending consultations without an SME
+    setOnline()
+
+    // Also auto-assign pending consultations that match this user's marketplaces
+    const autoAssign = async () => {
       const isRadarAdvisor = role === 'radar_advisor'
 
-      // Get this user's marketplaces
       const { data: mySchedule } = await supabase
         .from('sme_schedules')
         .select('marketplaces')
@@ -41,7 +44,6 @@ export default function AutoOnline({ userId, role }: Props) {
 
       if (pendingCases && pendingCases.length > 0) {
         for (const c of pendingCases) {
-          // Only assign if SME handles that marketplace or has no marketplaces set
           if (myMarketplaces.length > 0 && c.marketplace && !myMarketplaces.includes(c.marketplace)) continue
 
           await supabase.from('consultations').update({
@@ -50,7 +52,6 @@ export default function AutoOnline({ userId, role }: Props) {
             acknowledged_at: new Date().toISOString(),
           }).eq('id', c.id)
 
-          // Notify the investigator
           const { data: consultation } = await supabase
             .from('consultations')
             .select('investigator_id')
@@ -70,35 +71,7 @@ export default function AutoOnline({ userId, role }: Props) {
       }
     }
 
-    setOnlineAndAssign()
-
-    // Set Away when page hidden for more than 30 seconds, Available when visible again
-    let awayTimeout: NodeJS.Timeout | null = null
-
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'hidden') {
-        // Wait 30 seconds before marking as Away
-        awayTimeout = setTimeout(async () => {
-          await supabase.from('sme_schedules').update({
-            availability_status: 'Away',
-            updated_at: new Date().toISOString(),
-          }).eq('sme_id', userId)
-        }, 30000)
-      } else {
-        // Cancel the away timeout if page becomes visible again
-        if (awayTimeout) clearTimeout(awayTimeout)
-        await supabase.from('sme_schedules').update({
-          availability_status: 'Available',
-          updated_at: new Date().toISOString(),
-        }).eq('sme_id', userId)
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      if (awayTimeout) clearTimeout(awayTimeout)
-    }
+    autoAssign()
   }, [userId, role, supabase])
 
   return null
