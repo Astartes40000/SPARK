@@ -155,18 +155,29 @@ export default function NewConsultationPage() {
       ? `${caseType} — ${caseIdReference.trim()}`
       : `${caseType} — ${new Date().toISOString().split('T')[0]}`
 
-    // Auto-assign to available SME or Radar Advisor
+    // Auto-assign to available SME or Radar Advisor based on specialization
     let assignedSmeId: string | null = null
     let assignedSme: any = null
 
+    // Map case types to specialization names
+    const caseTypeToSpec: Record<string, string> = {
+      'New Case': 'New Case',
+      'Seller Appeal': 'Seller Appeals',
+      'Amznpend': 'Amznpend',
+      'SOP Discrepancy': 'SOP',
+      'Defect Review': 'Defect Review',
+    }
+    const requiredSpec = caseTypeToSpec[caseType] || caseType
+
     if (isRadar) {
-      // Find radar advisor with least queue
+      // Find radar advisor with matching specialization and least queue
       const { data: radarAdvisors } = await supabase
         .from('profiles')
-        .select('id, full_name, email, sme_schedules(availability_status, current_queue)')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue, specializations)')
         .eq('role', 'radar_advisor')
       const available = radarAdvisors?.filter((r: any) =>
-        r.sme_schedules?.[0]?.availability_status === 'Available'
+        r.sme_schedules?.[0]?.availability_status === 'Available' &&
+        (r.sme_schedules?.[0]?.specializations || []).includes(requiredSpec)
       ) || []
       if (available.length > 0) {
         available.sort((a: any, b: any) =>
@@ -174,15 +185,28 @@ export default function NewConsultationPage() {
         )
         assignedSme = available[0]
         assignedSmeId = available[0].id
+      } else {
+        // Fallback: any available radar advisor regardless of specialization
+        const fallback = radarAdvisors?.filter((r: any) =>
+          r.sme_schedules?.[0]?.availability_status === 'Available'
+        ) || []
+        if (fallback.length > 0) {
+          fallback.sort((a: any, b: any) =>
+            (a.sme_schedules?.[0]?.current_queue || 0) - (b.sme_schedules?.[0]?.current_queue || 0)
+          )
+          assignedSme = fallback[0]
+          assignedSmeId = fallback[0].id
+        }
       }
     } else {
-      // Find SME with least queue
+      // Find SME with matching specialization and least queue
       const { data: smes } = await supabase
         .from('profiles')
-        .select('id, full_name, email, sme_schedules(availability_status, current_queue)')
+        .select('id, full_name, email, sme_schedules(availability_status, current_queue, specializations)')
         .eq('role', 'sme')
       const available = smes?.filter((s: any) =>
-        s.sme_schedules?.[0]?.availability_status === 'Available'
+        s.sme_schedules?.[0]?.availability_status === 'Available' &&
+        (s.sme_schedules?.[0]?.specializations || []).includes(requiredSpec)
       ) || []
       if (available.length > 0) {
         available.sort((a: any, b: any) =>
@@ -190,6 +214,18 @@ export default function NewConsultationPage() {
         )
         assignedSme = available[0]
         assignedSmeId = available[0].id
+      } else {
+        // Fallback: any available SME regardless of specialization
+        const fallback = smes?.filter((s: any) =>
+          s.sme_schedules?.[0]?.availability_status === 'Available'
+        ) || []
+        if (fallback.length > 0) {
+          fallback.sort((a: any, b: any) =>
+            (a.sme_schedules?.[0]?.current_queue || 0) - (b.sme_schedules?.[0]?.current_queue || 0)
+          )
+          assignedSme = fallback[0]
+          assignedSmeId = fallback[0].id
+        }
       }
     }
 

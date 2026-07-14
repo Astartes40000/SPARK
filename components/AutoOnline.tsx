@@ -23,16 +23,37 @@ export default function AutoOnline({ userId, role }: Props) {
       // Auto-assign pending consultations without an SME
       const isRadarAdvisor = role === 'radar_advisor'
 
+      // Get this user's specializations
+      const { data: mySchedule } = await supabase
+        .from('sme_schedules')
+        .select('specializations')
+        .eq('sme_id', userId)
+        .single()
+      const mySpecs: string[] = mySchedule?.specializations || []
+
       const { data: pendingCases } = await supabase
         .from('consultations')
-        .select('id')
+        .select('id, case_type')
         .is('sme_id', null)
         .eq('status', 'Pending')
         .eq('is_radar', isRadarAdvisor)
-        .limit(5) // Take up to 5 pending cases at once
+        .limit(5)
+
+      // Map case types to specialization names
+      const caseTypeToSpec: Record<string, string> = {
+        'New Case': 'New Case',
+        'Seller Appeal': 'Seller Appeals',
+        'Amznpend': 'Amznpend',
+        'SOP Discrepancy': 'SOP',
+        'Defect Review': 'Defect Review',
+      }
 
       if (pendingCases && pendingCases.length > 0) {
         for (const c of pendingCases) {
+          // Only assign if SME has matching specialization or has no specializations set
+          const requiredSpec = caseTypeToSpec[c.case_type] || c.case_type
+          if (mySpecs.length > 0 && !mySpecs.includes(requiredSpec)) continue
+
           await supabase.from('consultations').update({
             sme_id: userId,
             status: 'Assigned',
