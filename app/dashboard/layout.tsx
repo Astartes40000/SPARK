@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Navbar from '@/components/Navbar'
-import PushSubscription from '@/components/PushSubscription'
 import AutoOnline from '@/components/AutoOnline'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -13,10 +12,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   const isSmeOrRadar = profile?.role === 'sme' || profile?.role === 'radar_advisor'
 
+  // Set SME/Radar Advisor as Available on page load (server-side)
+  if (isSmeOrRadar) {
+    await supabase.from('sme_schedules').upsert({
+      sme_id: user.id,
+      availability_status: 'Available',
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'sme_id' })
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }} className="bg-grid">
       <Navbar />
-      <PushSubscription />
       {isSmeOrRadar && <AutoOnline userId={user.id} role={profile!.role} />}
       <main className="max-w-6xl mx-auto px-4 py-6">
         {children}
